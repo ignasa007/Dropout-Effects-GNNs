@@ -1,0 +1,10 @@
+**/__pycache__/
+**/*.pth
+**/tmp/
+**/tmp*
+
+data/
+results/
+assets/overleaf
+experiments*
+git_token

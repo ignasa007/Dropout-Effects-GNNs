@@ -29,6 +29,7 @@ format_dropout_name = {
     'drop-gnn': 'DropGNN', 'dropgnn': 'DropGNN',
     'drop-agg': 'DropAgg', 'dropagg': 'DropAgg',
     'drop-sens': 'DropSens', 'dropsens': 'DropSens',
+    'skip-node': 'SkipNode', 'skipnode': 'SkipNode',
 }
 
 format_activation_name = {

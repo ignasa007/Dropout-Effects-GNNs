@@ -6,6 +6,8 @@ from model.dropout.drop_message import DropMessage
 from model.dropout.drop_gnn import DropGNN
 from model.dropout.drop_agg import DropAgg
 from model.dropout.drop_sens import DropSens
+from model.dropout.skip_node import SkipNode
+
 
 def get_dropout(dropout_name: str):
 
@@ -18,6 +20,7 @@ def get_dropout(dropout_name: str):
         'dropgnn': DropGNN,
         'dropagg': DropAgg,
         'dropsens': DropSens,
+        'skipnode': SkipNode,
     }
 
     formatted_name = dropout_name.replace('-', '').lower()

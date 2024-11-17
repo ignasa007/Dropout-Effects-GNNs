@@ -13,13 +13,13 @@ class SkipNode(BaseDropout):
         if not training or self.dropout_prob == 0.0:
             return x
 
-        if hasattr(self, 'x') and x.size(1) == self.x.size(1):
+        new_x = x.clone()
+        if hasattr(self, 'old_x') and new_x.size(1) == self.old_x.size(1):
             node_mask = torch.rand(x.size(0)) < self.dropout_prob
-            x[node_mask] = self.x[node_mask]
+            new_x[node_mask] = self.old_x[node_mask]
+        self.old_x = new_x
 
-        self.x = x
-
-        return x
+        return new_x
 
     def apply_adj_mat(self, edge_index, edge_attr=None, training=True):
         

@@ -25,6 +25,10 @@ class DropSens(BaseDropout):
         if not hasattr(self, 'q_d'):
             degrees = degree(edge_index[1])
             self.q_d = torch.clip(self.dropout_prob ** (1/degrees[edge_index[1]]), max=0.5)
+            # for d in tqdm(degrees.tolist()):                                                                                
+            #     d = sympy.N(sympy.real_roots(d*(1-0.9)*(1-x)-x+x**(d+1))[-2]) if d!=0 else 0
+            # can only compute upto a certain degree, because it takes a lot of time for high d.
+            # anyway, since we want to clip the dropping prob, the two goals align.
         
         edge_mask = torch.rand(edge_index.size(1)) >= self.q_d
         edge_index = edge_index[:, edge_mask]

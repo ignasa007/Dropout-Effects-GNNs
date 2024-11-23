@@ -27,6 +27,11 @@ class BaseHead(Module):
         # the output layer does not use any activation
         self.ffn = Sequential(*module_list[:-1])
 
+    def reset_parameters(self):
+        
+        for linear_layer in self.ffn:
+            linear_layer.reset_parameters()
+
     def preprocess(self, node_repr: Tensor, mask: Optional[Union[Tensor, BoolTensor]] = None):
 
         '''

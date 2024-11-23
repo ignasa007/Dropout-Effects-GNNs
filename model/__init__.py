@@ -44,6 +44,13 @@ class Model(Module):
             others=others,
         )
 
+    def reset_parameters(self):
+        
+        for mp_layer in self.message_passing:
+            mp_layer.reset_parameters()
+
+        self.readout.reset_parameters()
+
     def forward(
         self,
         x: Tensor,

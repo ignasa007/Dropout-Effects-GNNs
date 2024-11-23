@@ -59,6 +59,7 @@ for i in node_samples:
 
     for init_sample in range(INIT_SAMPLES):
 
+        model.reset_parameters()
         save_fn = f'{i_dir}/sample-{init_sample+1}.pkl'
         if os.path.exists(save_fn):
             continue

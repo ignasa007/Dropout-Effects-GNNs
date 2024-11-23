@@ -30,6 +30,7 @@ for trained in ('untrained', 'trained'):
         
         for timestamp in os.listdir(f'{models_dir}/{P_dir}'):
 
+            # sum of aggregated sensitivity () between nodes at 
             sum_jac_norms = torch.zeros(L+1)
             count_jac_norms = torch.zeros_like(sum_jac_norms)
 
@@ -39,13 +40,12 @@ for trained in ('untrained', 'trained'):
             for i, idx in enumerate(indices):
                 with open(f'{jac_norms_dir}/i={idx}/shortest_distances.pkl', 'rb') as f:
                     shortest_distances = pickle.load(f)
-                x_sd = shortest_distances.unique().int()
+                x_sd = torch.arange(1 + max(shortest_distances.max(), L))
                 with open(f'{jac_norms_dir}/i={idx}/{P_dir}/{timestamp}/{trained}.pkl', 'rb') as f:
                     jac_norms = pickle.load(f)
                 y_sd = bin_jac_norms(jac_norms, shortest_distances, x_sd, args.agg)
-                mask, = torch.where(x_sd<=L)
-                sum_jac_norms[x_sd[mask]] += y_sd[mask]
-                count_jac_norms[x_sd[mask]] += 1
+                sum_jac_norms[x_sd] += y_sd
+                count_jac_norms[x_sd] += 1
 
             # average over molecules
             mean_jac_norms.append(sum_jac_norms/count_jac_norms)

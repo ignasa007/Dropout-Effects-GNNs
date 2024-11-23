@@ -10,7 +10,7 @@ from torch_geometric.data import InMemoryDataset
 from torch_geometric.datasets import ZINC as ZINCTorch
 from torch.optim import Optimizer
 
-from dataset.constants import root, batch_size
+from dataset.constants import root
 from dataset.base import BaseDataset
 from dataset.utils import create_loaders
 from model import Model
@@ -103,7 +103,7 @@ class SyntheticZINC_SD(BaseDataset):
         self.num_classes = 1
         super(SyntheticZINC_SD, self).__init__(self.task_name)
 
-    def train(self, model: Model, optimizer: Optimizer):
+    def train(self, model: Model, optimizer: Optimizer) -> Dict[str, float]:
 
         model.train()
 

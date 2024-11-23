@@ -1,5 +1,5 @@
 from argparse import Namespace
-from typing import Dict
+from typing import Tuple, Dict
 
 import torch
 from torch_geometric.datasets import TUDataset as TUDatasetTorch
@@ -60,7 +60,7 @@ class SyntheticMUTAG(BaseDataset):
         
         super(SyntheticMUTAG, self).__init__(self.task_name)
 
-    def train(self, model: Model, optimizer: Optimizer):
+    def train(self, model: Model, optimizer: Optimizer) -> Dict[str, float]:
 
         model.train()
 
@@ -75,7 +75,7 @@ class SyntheticMUTAG(BaseDataset):
         return train_metrics
     
     @torch.no_grad()
-    def eval(self, model: Model) -> Dict[str, float]:
+    def eval(self, model: Model) -> Tuple[Dict[str, float], Dict[str, float]]:
 
         model.eval()
         

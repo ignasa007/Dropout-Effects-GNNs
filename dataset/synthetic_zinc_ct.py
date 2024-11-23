@@ -104,7 +104,7 @@ class SyntheticZINC_CT(BaseDataset):
         self.num_classes = 1
         super(SyntheticZINC_CT, self).__init__(self.task_name)
 
-    def train(self, model: Model, optimizer: Optimizer):
+    def train(self, model: Model, optimizer: Optimizer) -> Dict[str, float]:
 
         model.train()
 

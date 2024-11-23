@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Tuple, Dict
 
 import torch
 from torch_geometric.datasets import LRGBDataset as LRGBDatasetTorch
@@ -33,7 +33,7 @@ class LRGBDataset(BaseDataset):
         self.num_classes = train.num_classes
         super(LRGBDataset, self).__init__(self.task_name)
 
-    def train(self, model: Model, optimizer: Optimizer):
+    def train(self, model: Model, optimizer: Optimizer) -> Dict[str, float]:
 
         model.train()
 
@@ -48,7 +48,7 @@ class LRGBDataset(BaseDataset):
         return train_metrics
     
     @torch.no_grad()
-    def eval(self, model: Model) -> Dict[str, float]:
+    def eval(self, model: Model) -> Tuple[Dict[str, float], Dict[str, float]]:
 
         model.eval()
         

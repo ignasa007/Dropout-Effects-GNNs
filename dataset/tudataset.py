@@ -29,7 +29,7 @@ class TUDataset(BaseDataset):
         self.num_classes = dataset.num_classes
         super(TUDataset, self).__init__(self.task_name)
 
-    def train(self, model: Model, optimizer: Optimizer):
+    def train(self, model: Model, optimizer: Optimizer) -> Dict[str, float]:
 
         model.train()
 
@@ -44,7 +44,7 @@ class TUDataset(BaseDataset):
         return train_metrics
     
     @torch.no_grad()
-    def eval(self, model: Model) -> Dict[str, float]:
+    def eval(self, model: Model):
 
         model.eval()
         

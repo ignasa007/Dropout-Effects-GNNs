@@ -84,7 +84,7 @@ class GATLayer(GATConv):
         edge_index, _ = self.treat_adj_mat(edge_index, num_nodes=x_src.size(0), dtype=x_src.dtype)
         # MESSAGE PASSING
         out = self.message_passing(edge_index, x=x, alpha=alpha)
-        # ADD BIAS
+        # APPLY ACTIVATION
         out = self.nonlinearity(out)
 
         return out

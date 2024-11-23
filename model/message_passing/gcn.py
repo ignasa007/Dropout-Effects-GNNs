@@ -73,7 +73,7 @@ class GCNLayer(GCNConv):
         edge_index, edge_weight = self.treat_adj_mat(edge_index, num_nodes=x.size(0), dtype=x.dtype)
         # MESSAGE PASSING
         out = self.message_passing(edge_index, x, edge_weight)
-        # ADD BIAS
+        # APPLY ACTIVATION
         out = self.nonlinearity(out)
 
         return out

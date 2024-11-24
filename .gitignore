@@ -5,5 +5,5 @@
 data/
 results/
 assets/overleaf
-experiments*
-jac-norms
+jac-norms/
+manuscript/

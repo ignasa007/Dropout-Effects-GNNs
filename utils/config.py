@@ -65,11 +65,11 @@ def parse_arguments(return_others=False):
     )
 
     parser.add_argument(
-        '--n_epochs', type=int, default=500,
+        '--n_epochs', type=int, default=300,
         help='Number of epochs to train the model for.'
     )
     parser.add_argument(
-        '--learning_rate', type=float, default=1e-3,
+        '--learning_rate', type=float, default=3e-3,
         help='Learning rate for Adam optimizer.'
     )
     parser.add_argument(

@@ -18,6 +18,7 @@ format_layer_name = {
     'gcn': 'GCN',
     'gat': 'GAT',
     'appnp': 'APPNP',
+    'resgcn': 'ResGCN',
 }
 
 format_dropout_name = {

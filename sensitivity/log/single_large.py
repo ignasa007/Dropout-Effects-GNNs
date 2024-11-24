@@ -57,7 +57,6 @@ for i in node_samples:
     x = dataset.x[subset, :]
     new_i = torch.where(subset == i)[0].item()
 
-    # for init_sample in range(INIT_SAMPLES):     # sampling model, then masks
     for init_sample in range(INIT_SAMPLES*MASK_SAMPLES):    # joint sampling 
 
         model.reset_parameters()
@@ -65,6 +64,5 @@ for i in node_samples:
         if os.path.exists(save_fn):
             continue
         os.makedirs(os.path.dirname(save_fn), exist_ok=True)
-        # jac_norms = get_jacobian_norms(x, edge_index, new_i, model, MASK_SAMPLES, config, others)
         jac_norms = get_jacobian_norms(x, edge_index, new_i, model, 1, config, others)
         torch.save(jac_norms, save_fn)

@@ -12,7 +12,7 @@ from sensitivity.utils import to_adj_mat, Model, get_jacobian_norms
 
 
 NODE_SAMPLES = 100
-MASK_SAMPLES = 10
+MASK_SAMPLES = 5
 INIT_SAMPLES = 5
 
 config, others = parse_arguments(return_others=True)
@@ -57,12 +57,14 @@ for i in node_samples:
     x = dataset.x[subset, :]
     new_i = torch.where(subset == i)[0].item()
 
-    for init_sample in range(INIT_SAMPLES):
+    # for init_sample in range(INIT_SAMPLES):     # sampling model, then masks
+    for init_sample in range(INIT_SAMPLES*MASK_SAMPLES):    # joint sampling 
 
         model.reset_parameters()
         save_fn = f'{i_dir}/sample-{init_sample+1}.pkl'
         if os.path.exists(save_fn):
             continue
         os.makedirs(os.path.dirname(save_fn), exist_ok=True)
-        jac_norms = get_jacobian_norms(x, edge_index, new_i, model, MASK_SAMPLES, config, others)
+        # jac_norms = get_jacobian_norms(x, edge_index, new_i, model, MASK_SAMPLES, config, others)
+        jac_norms = get_jacobian_norms(x, edge_index, new_i, model, 1, config, others)
         torch.save(jac_norms, save_fn)

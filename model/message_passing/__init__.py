@@ -1,4 +1,5 @@
 from model.message_passing.gcn import GCNLayer
+from model.message_passing.resgcn import ResGCNLayer
 from model.message_passing.gat import GATLayer
 from model.message_passing.appnp import APPNPLayer
 
@@ -9,6 +10,7 @@ def get_layer(layer_name: str):
         'gcn': GCNLayer,
         'gat': GATLayer,
         'appnp': APPNPLayer,
+        'resgcn': ResGCNLayer,
     }
     
     formatted_name = layer_name.lower()

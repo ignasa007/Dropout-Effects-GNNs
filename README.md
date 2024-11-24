@@ -49,7 +49,7 @@ python -B main.py \
 
 See `config.py` for the full list of command line arguments.
 - `${dataset}` can be one of Cora, CiteSeer, PubMed, Proteins, MUTAG and PTC.
-- `${gnn}` can be one of GCN, GAT and APPNP
+- `${gnn}` can be one of GCN, ResGCN, GAT and APPNP
     - is using GAT, pass the number of attention heads, eg. `--attention_heads 2`
     - if using APPNP, pass the number of power iteration steps and the teleport probability, eg. `--power_iter 10 --teleport_p 0.1`
 - the hidden layer sizes can be passed via `--gnn_layer_sizes`, eg. `64 32 16` or even `64*3 32*2 16*1`

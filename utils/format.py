@@ -34,7 +34,7 @@ format_dropout_name = {
 }
 
 format_activation_name = {
-    'identiy': 'Identity',
+    'identity': 'Identity',
     'relu': 'ReLU',
     'elu': 'ELU',
     'sigmoid': 'Sigmoid',

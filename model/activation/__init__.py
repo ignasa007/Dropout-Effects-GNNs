@@ -4,7 +4,7 @@ from torch.nn import Identity, ReLU, ELU, Sigmoid, Tanh
 def get_activation(activation_name: str):
 
     activation_map = {
-        'identiy': Identity,
+        'identity': Identity,
         'relu': ReLU,
         'elu': ELU,
         'sigmoid': Sigmoid,

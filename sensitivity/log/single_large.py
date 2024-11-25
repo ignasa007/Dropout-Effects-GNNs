@@ -1,5 +1,5 @@
 import os
-import pickle
+from tqdm import tqdm
 
 import numpy as np
 from scipy.sparse.csgraph import connected_components, shortest_path
@@ -11,22 +11,24 @@ from utils.config import parse_arguments
 from sensitivity.utils import to_adj_mat, Model, get_jacobian_norms
 
 
-NODE_SAMPLES = 100
+NODE_SAMPLES = 20
 MASK_SAMPLES = 5
 INIT_SAMPLES = 5
-
+jac_norms_dir = f'./jac-norms'
+os.makedirs(jac_norms_dir, exist_ok=True)
 config, others = parse_arguments(return_others=True)
-DEVICE = torch.device(f'cuda:{config.device_index}' if torch.cuda.is_available() and config.device_index is not None else 'cpu')
 
+if config.dropout == 'NoDrop':
+    config.drop_p = 0.0 
+if config.drop_p == 0.0:
+    INIT_SAMPLES = INIT_SAMPLES * MASK_SAMPLES
+    MASK_SAMPLES = 1
+
+DEVICE = torch.device(f'cuda:{config.device_index}' if torch.cuda.is_available() and config.device_index is not None else 'cpu')
 dataset = get_dataset(config.dataset, config=config, others=others, device=DEVICE)
 others.input_dim = dataset.num_features
 others.output_dim = dataset.output_dim
 others.task_name = dataset.task_name
-
-model = Model(config, others).to(device=DEVICE)
-
-jac_norms_dir = f'./jac-norms/{config.dropout}/{config.dataset}/{config.gnn}/L={len(config.gnn_layer_sizes)}/P={round(config.drop_p, 6)}'
-os.makedirs(jac_norms_dir, exist_ok=True)
 
 num_nodes = dataset.x.size(0)
 A = to_adj_mat(dataset.edge_index, num_nodes, undirected=True, assert_connected=False)
@@ -42,15 +44,17 @@ logged_indices = set((int(x.split('=')[1]) for x in os.listdir(jac_norms_dir)))
 node_samples = np.random.choice(all_indices[~np.isin(all_indices, logged_indices)], NODE_SAMPLES-len(logged_indices), replace=False)
 node_samples = logged_indices.union(node_samples)
 
-for i in node_samples:
+for i in tqdm(node_samples):
 
-    shortest_distances = torch.from_numpy(shortest_path(A, method='D', indices=i))
-    subset = torch.where(shortest_distances <= len(config.gnn_layer_sizes))[0]
-
-    print(i, subset.size(0))
     i_dir = f'{jac_norms_dir}/i={i}'
-    os.makedirs(i_dir, exist_ok=True)
-    torch.save(shortest_distances[subset], f'{i_dir}/shortest_distances.pkl')
+    model = Model(config, others).to(device=DEVICE)     # initializing here to reset DropSens
+
+    shortest_distances = torch.from_numpy(shortest_path(A, method='D', indices=i)).int()
+    subset = torch.where(torch.logical_and(0 <= shortest_distances, shortest_distances <= len(config.gnn_layer_sizes)))[0]
+    fn = f'{i_dir}/shortest_distances.pkl'
+    if not os.path.exists(fn):
+        os.makedirs(i_dir, exist_ok=True)
+        torch.save(shortest_distances[subset], fn)
 
     edge_index, _ = subgraph(subset, dataset.edge_index, relabel_nodes=True, num_nodes=dataset.x.size(0))
     # checked implementation and relabelling is such that subset[i] is relabelled as i
@@ -60,9 +64,8 @@ for i in node_samples:
     for init_sample in range(INIT_SAMPLES*MASK_SAMPLES):    # joint sampling 
 
         model.reset_parameters()
-        save_fn = f'{i_dir}/sample-{init_sample+1}.pkl'
-        if os.path.exists(save_fn):
-            continue
-        os.makedirs(os.path.dirname(save_fn), exist_ok=True)
-        jac_norms = get_jacobian_norms(x, edge_index, new_i, model, 1, config, others)
-        torch.save(jac_norms, save_fn)
+        save_fn = f'{i_dir}/{config.dropout}-{config.gnn}/sample-{init_sample+1}.pkl'
+        if not os.path.exists(save_fn):
+            jac_norms = get_jacobian_norms(x, edge_index, new_i, model, 1, config, others)
+            os.makedirs(os.path.dirname(save_fn), exist_ok=True)
+            torch.save(jac_norms, save_fn)

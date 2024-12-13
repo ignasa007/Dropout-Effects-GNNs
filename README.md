@@ -1,8 +1,9 @@
 ## Directory Structure
 
-- `assets` - plots and other images included in the thesis
+- `assets` - plots and other images included in the manuscript
 - `data` - root directory for saving raw (and transformed) datasets, eg. `./data/Planetoid/Cora/`
 - `dataset` - Python classes to handle different datasets, and make them suitable for training, eg. Cora
+- `manuscript` - helper methods for reporting the final results
 - `metrics` - Python classes for storing and computing performance metrics, eg. classification
 - `model` - Python classes to initialize the model architectures
     - `activation` - activation functions, eg. ReLU
@@ -34,7 +35,7 @@ pip install -r requirements.txt
 To train a model, execute
 ```bash
 python -B main.py \
-    --dataset $dataset \
+    --dataset ${dataset} \
     --gnn ${gnn} \
     --gnn_layer_sizes ${width}*${depth}
     --ffn_layer_sizes \
@@ -61,3 +62,94 @@ See `config.py` for the full list of command line arguments.
 - for the `--test_every` or `--save_every` arguments
     - passing `-1` instructs to test/save only in the last epoch
     - passing nothing instructs to not save/test in any epoch
+
+## Reproducing the Results
+
+**Figure 1**
+
+```bash
+python -m plots.linear_gcn.asymmetric --dataset ${dataset}   # left and middle plots
+python -m plots.linear_gcn.compare_drop --dataset ${dataset} # right plot
+```
+
+- `${dataset}` can be one of Proteins and MUTAG. Technically, PTC can work as well, but it only has 188 graphs, and we report results for 200 graphs in the manuscript. The implementations can only use these datasets right now because PyG has a common API for them, but one can edit the line `dataset = TUDataset(...)` to use any other suitable dataset. Importantly, the dataset must have small graphs for fast sensitivity computation.
+- The image files are stored at `./assets/linear-gcn/asymmetric/${dataset}.png` and `./assets/linear-gcn/compare-drop/${dataset}.png`, respectively.
+
+**Table 2**
+
+First exectute the experiments as described in the [Execution](#execution) section. Then print the LaTex table (I am lazy like that :')).
+
+```bash
+python -m manuscript.results_table
+```
+
+**Figure 2**
+
+```bash
+python -m plots.metrics.philia --gnn ${gnn} --dropout ${dropout}
+```
+
+- In Figure 2, `gnn=GCN` and `dropout=DropEdge`.
+- The image files are stored at `./assets/${dropout}/${philia}.png`, where `${philia}` is one of `homophilic` and `heterophilic`.
+
+**Figure 3**
+
+```bash
+python -m plots.metrics.ablation --gnn ${gnn} --dropout ${dropout}
+```
+
+The image files are stored at `./assets/${dropout}/ablation.png`.
+
+**Figure 4**
+
+This experiment uses Jacobian sampling with Cora dataset.
+
+```bash
+python -m sensitivity.log.single_large \
+    --dataset ${dataset} \
+    --gnn ${gnn} \
+    --gnn_layer_sizes ${width}*${depth}
+    --ffn_layer_sizes \
+    --dropout ${dropout} \
+    --drop_p ${drop_p}
+```
+
+- 20 target nodes are sampled from Cora.
+- For each of them, their 6-hop neighborhoods and the associated subgraph are computed.
+- The Jacobian of the target node's representations are computed with respect to the source node's features.
+- 25 samples are computed for each target node. In case of dropping methods, the model initialization and random masks are jointly sampled.
+- The Jacobian norms are stored at `./jac-norms/i=${i}/${dropout}-${gnn}/sample-${sample}.pkl`, where `${i}` is the index of the node in the original Cora network and `${sample}` is from 1 to 25.
+- The shortest distances from source nodes are stored at `./jac-norms/i=${i}/shortest_distances.pkl`.
+
+```bash
+python -m sensitivity.plot.jac_norm_vs_sd
+```
+
+- Compute the total number of node pairs at each of the distances 0 to 6 (line 42), as well as the sum of the sensitivity between nodes at these distances (line 48).
+- Compute the mean sensitivity between nodes at different distances (line 51).
+- Compute the influence distribution (line 53).
+- Compute the mean and standard deviation &ndash; over the 25 samples &ndash; of the influence at different distances (line 55).
+
+**Figure 5**
+
+```bash
+python -m plots.linear_gcn.symmetric --dataset ${dataset}
+```
+
+The image files are stored at `./assets/linear-gcn/symmetric/${dataset}.png`.
+
+**Figure 6**
+
+```bash
+python -m plots.linear_gcn.black_extension --dataset ${dataset}
+```
+
+The image files are stored at `./assets/linear-gcn/black-extension/${dataset}.png`.
+
+**Figure 7**
+
+```bash
+python -m plots.metrics.philia --gnn ${gnn} --dropout ${dropout}
+```
+
+In Figure 2, `gnn=GCN` and `dropout=DropNode`.

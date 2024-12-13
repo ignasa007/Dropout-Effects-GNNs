@@ -1,7 +1,7 @@
 This is the official code repository for the paper **Effects of Random Edge-Dropping on Over-Squashing in Graph Neural Networks**. If you use this work, kindly cite it as
 
 ```
-@inproceedings{
+@misc{
     singh2024effects,
     title={Effects of Random Edge-Dropping on Over-Squashing in Graph Neural Networks},
     author={Jasraj Singh, Keyue Jiang, Brooks Paige, Laura Toni},

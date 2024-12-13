@@ -152,4 +152,4 @@ The image files are stored at `./assets/linear-gcn/black-extension/${dataset}.pn
 python -m plots.metrics.philia --gnn ${gnn} --dropout ${dropout}
 ```
 
-In Figure 2, `gnn=GCN` and `dropout=DropNode`.
+In Figure 7, `gnn=GCN` and `dropout=DropNode`.

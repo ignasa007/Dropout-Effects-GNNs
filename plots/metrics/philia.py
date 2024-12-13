@@ -1,10 +1,8 @@
 import os
 import warnings; warnings.filterwarnings('ignore')
 from collections import defaultdict
-from itertools import product
 
 import numpy as np
-from scipy.stats import pearsonr, spearmanr
 import matplotlib.pyplot as plt
 
 from utils.parse_logs import parse_metrics, parse_configs
@@ -15,7 +13,7 @@ hetero_data = ('Chameleon', 'Squirrel', 'TwitchDE')
 homo_cutoffs = (0.3021, 0.2107)
 hetero_cutoffs = (0.2288, 0.1203, 0.6045)
 gnn = 'GCN'
-dropout = 'DropNode'
+dropout = 'DropEdge'
 
 metric = 'Accuracy'
 depths = range(2, 9, 2)
@@ -79,6 +77,6 @@ for fn, datasets, cutoffs in zip(('homophilic', 'heterophilic'), (homo_data, het
         handles, labels = ax.get_legend_handles_labels()
         fig.legend(handles, labels, loc='upper center', fontsize=18, ncol=ncol, bbox_to_anchor = (0.5, -0.02))
     fig.tight_layout()
-    fn = f'./assets/philia/{dropout}/{fn}.png'
+    fn = f'./assets/{dropout}/{fn}.png'
     os.makedirs(os.path.dirname(fn), exist_ok=True)
     plt.savefig(fn, bbox_inches='tight')

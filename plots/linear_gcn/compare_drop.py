@@ -1,6 +1,5 @@
 '''
-Poor naming of the file :(
-    considers the sensitivity in the case the propagation matrix is D^{-1}A
+Compare sensitivity of different edge-dropping methods.
 '''
 
 import os

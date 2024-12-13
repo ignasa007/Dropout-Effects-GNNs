@@ -8,12 +8,12 @@ from sensitivity.utils import bin_jac_norms
 
 
 jac_norms_dir = './jac-norms'
-fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+fig, ax = plt.subplots(1, 1); ncol = 4
 N_SAMPLES = 25
 
 models = (
     ('NoDrop', 'Cora', 'GCN', 6, 0.0),
-    ('DropMessage', 'Cora', 'ResGCN', 6, 0.0),
+    ('NoDrop', 'Cora', 'ResGCN', 6, 0.0),
     # ('DropEdge', 'Cora', 'GCN', 6, 0.5),
     # ('DropEdge', 'Cora', 'GCN', 6, 0.1),
     # ('DropNode', 'Cora', 'GCN', 6, 0.5),
@@ -64,7 +64,7 @@ ax.set_yscale('log')
 ax.grid()
 
 handles, labels = ax.get_legend_handles_labels()
-fig.legend(handles, labels, loc='lower center', ncol=3, bbox_to_anchor = (0, -0.07, 1, 1))
+fig.legend(handles, labels, loc='lower center', ncol=ncol, bbox_to_anchor = (0, -0.07, 1, 1))
 fig.tight_layout()
 
 fn = f'./assets/sensitivity.png'

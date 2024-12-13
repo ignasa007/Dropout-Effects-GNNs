@@ -1,4 +1,4 @@
-This is the official code repository for the paper **Effects of Random Edge-Dropping on Over-Squashing in Graph Neural Networks**. If you use this work, kindly cite it as
+This is the official code repository for the paper [**Effects of Random Edge-Dropping on Over-Squashing in Graph Neural Networks**](https://openreview.net/forum?id=ZZwP9zljas). If you use this work, kindly cite it as
 
 ```
 @misc{

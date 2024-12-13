@@ -8,7 +8,7 @@ from sensitivity.utils import bin_jac_norms
 
 
 jac_norms_dir = './jac-norms'
-fig, ax = plt.subplots(1, 1); ncol = 4
+fig, ax = plt.subplots(1, 1, figsize=(6, 4)); ncol = 4
 N_SAMPLES = 25
 
 models = (
@@ -19,8 +19,8 @@ models = (
     # ('DropNode', 'Cora', 'GCN', 6, 0.5),
     # ('DropAgg', 'Cora', 'GCN', 6, 0.5),
     # ('DropGNN', 'Cora', 'GCN', 6, 0.5),
-    ('Dropout', 'Cora', 'GCN', 6, 0.5),
-    ('DropMessage', 'Cora', 'GCN', 6, 0.5),
+    # ('Dropout', 'Cora', 'GCN', 6, 0.5),
+    # ('DropMessage', 'Cora', 'GCN', 6, 0.5),
     # ('SkipNode', 'Cora', 'GCN', 6, 0.5),
     # ('DropSens', 'Cora', 'GCN', 6, 0.9),
 )
@@ -58,13 +58,13 @@ for dropout, dataset, gnn, L, drop_p in tqdm(models):
     ax.plot(x, mean, label=f'{dropout}-{gnn}')
     ax.fill_between(x, mean-std, mean+std, alpha=0.2)
 
-ax.set_xlabel('Shortest Distances')
-ax.set_ylabel('Influence Distribution')
+ax.set_xlabel('Shortest Distances', fontsize=18)
+ax.set_ylabel('Influence Distribution', fontsize=18)
 ax.set_yscale('log')
 ax.grid()
 
 handles, labels = ax.get_legend_handles_labels()
-fig.legend(handles, labels, loc='lower center', ncol=ncol, bbox_to_anchor = (0, -0.07, 1, 1))
+fig.legend(handles, labels, loc='lower center', fontsize=15, ncol=ncol, bbox_to_anchor = (0, -0.15, 1, 1))
 fig.tight_layout()
 
 fn = f'./assets/sensitivity.png'

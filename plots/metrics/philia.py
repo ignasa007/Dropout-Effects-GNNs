@@ -1,3 +1,4 @@
+import argparse
 import os
 import warnings; warnings.filterwarnings('ignore')
 from collections import defaultdict
@@ -8,12 +9,15 @@ import matplotlib.pyplot as plt
 from utils.parse_logs import parse_metrics, parse_configs
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--gnn', type=str, default='GCN', choices=['GCN', 'GAT'])
+parser.add_argument('--dropout', type=str, default='DropEdge')
+args = parser.parse_args()
+
 homo_data = ('Cora', 'CiteSeer')
 hetero_data = ('Chameleon', 'Squirrel', 'TwitchDE')
 homo_cutoffs = (0.3021, 0.2107)
 hetero_cutoffs = (0.2288, 0.1203, 0.6045)
-gnn = 'GCN'
-dropout = 'DropEdge'
 
 metric = 'Accuracy'
 depths = range(2, 9, 2)
@@ -30,8 +34,8 @@ for fn, datasets, cutoffs in zip(('homophilic', 'heterophilic'), (homo_data, het
 
     for dataset, cutoff, ax in zip(datasets, cutoffs, axs):
 
-        results_dir = f'./results/{dropout}/{dataset}'
-        exp_dir = results_dir + '/{gnn}/L={depth}/P={p}'
+        results_dir = f'./results/{args.dropout}/{dataset}'
+        exp_dir = results_dir + '/{args.gnn}/L={depth}/P={p}'
 
         ### RETRIEVE METRICS ###
 
@@ -39,7 +43,7 @@ for fn, datasets, cutoffs in zip(('homophilic', 'heterophilic'), (homo_data, het
 
         for depth in depths:
             for p in ps:
-                exp_dir_format = exp_dir.format(gnn=gnn, depth=depth, p=p)
+                exp_dir_format = exp_dir.format(gnn=args.gnn, depth=depth, p=p)
                 if not os.path.exists(exp_dir_format):
                     continue
                 for sample_dir in os.listdir(exp_dir_format):
@@ -56,7 +60,7 @@ for fn, datasets, cutoffs in zip(('homophilic', 'heterophilic'), (homo_data, het
         for depth in depths:
             for p in ps:
                 if len(test_metrics[(depth, p)]) != 5:
-                    print(dataset, gnn, depth, p, len(test_metrics[(depth, p)]))
+                    print(dataset, args.gnn, depth, p, len(test_metrics[(depth, p)]))
 
         ### PLOT FOR TEST SET ###
 
@@ -69,7 +73,7 @@ for fn, datasets, cutoffs in zip(('homophilic', 'heterophilic'), (homo_data, het
                     mean, std = test_metrics[(depth, drop_p)]
                     drop_ps.append(drop_p); means.append(mean); lower.append(mean-std); upper.append(mean+std)
             ax.plot(drop_ps, means, label=f'L = {depth}')
-        ax.set_xlabel(fr'{dropout} Probability, $q$', fontsize=20)
+        ax.set_xlabel(fr'{args.dropout} Probability, $q$', fontsize=20)
         ax.set_title(dataset, fontsize=20)
         ax.grid()
 
@@ -77,6 +81,6 @@ for fn, datasets, cutoffs in zip(('homophilic', 'heterophilic'), (homo_data, het
         handles, labels = ax.get_legend_handles_labels()
         fig.legend(handles, labels, loc='upper center', fontsize=18, ncol=ncol, bbox_to_anchor = (0.5, -0.02))
     fig.tight_layout()
-    fn = f'./assets/{dropout}/{fn}.png'
+    fn = f'./assets/{args.dropout}/{fn}.png'
     os.makedirs(os.path.dirname(fn), exist_ok=True)
     plt.savefig(fn, bbox_inches='tight')

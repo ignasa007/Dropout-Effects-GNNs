@@ -13,16 +13,16 @@ N_SAMPLES = 25
 
 models = (
     ('NoDrop', 'Cora', 'GCN', 6, 0.0),
-    # ('NoDrop', 'Cora', 'ResGCN', 6, 0.0),
+    ('DropMessage', 'Cora', 'ResGCN', 6, 0.0),
     # ('DropEdge', 'Cora', 'GCN', 6, 0.5),
-    ('DropEdge', 'Cora', 'GCN', 6, 0.1),
+    # ('DropEdge', 'Cora', 'GCN', 6, 0.1),
     # ('DropNode', 'Cora', 'GCN', 6, 0.5),
     # ('DropAgg', 'Cora', 'GCN', 6, 0.5),
     # ('DropGNN', 'Cora', 'GCN', 6, 0.5),
-    # ('Dropout', 'Cora', 'GCN', 6, 0.5),
-    # ('DropMessage', 'Cora', 'GCN', 6, 0.5),
+    ('Dropout', 'Cora', 'GCN', 6, 0.5),
+    ('DropMessage', 'Cora', 'GCN', 6, 0.5),
     # ('SkipNode', 'Cora', 'GCN', 6, 0.5),
-    ('DropSens', 'Cora', 'GCN', 6, 0.9),
+    # ('DropSens', 'Cora', 'GCN', 6, 0.9),
 )
 
 for dropout, dataset, gnn, L, drop_p in tqdm(models):
@@ -47,18 +47,19 @@ for dropout, dataset, gnn, L, drop_p in tqdm(models):
             y_sd = bin_jac_norms(jac_norms, shortest_distances, x_sd, agg='sum')
             sum_jac_norms[int(sample.lstrip('sample-').rstrip('.pkl'))-1, x_sd] += y_sd
 
-    # average over source nodes when single large network, or multiple small graphs
-    mean_jac_norms = sum_jac_norms / count_jac_norms.unsqueeze(0)
-
+    # average over source nodes in a single large network, or multiple small graphs
+    mean_jac_norms = sum_jac_norms / count_jac_norms
+    # convert to ratio (cf. influence distribution)
+    mean_jac_norms = mean_jac_norms / mean_jac_norms.sum(dim=1, keepdim=True)
     # average over initialization and/or mask samples
     std, mean = torch.std_mean(mean_jac_norms, dim=0)
+    
     x = torch.arange(L+1)
-
     ax.plot(x, mean, label=f'{dropout}-{gnn}')
     ax.fill_between(x, mean-std, mean+std, alpha=0.2)
 
 ax.set_xlabel('Shortest Distances')
-ax.set_ylabel('Mean Sensitivity')
+ax.set_ylabel('Influence Distribution')
 ax.set_yscale('log')
 ax.grid()
 

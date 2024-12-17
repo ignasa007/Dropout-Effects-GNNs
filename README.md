@@ -56,7 +56,7 @@ See `config.py` for the full list of command line arguments.
 - the hidden layer sizes can be passed via `--gnn_layer_sizes`, eg. `64 32 16` or even `64*3 32*2 16*1`
 - if the task is at the graph level, `--pooler` argument needs to be passed
     - options are `mean`, `add` and `max`
-- the readout layer is an MLP with hidden layer sizes passed via `--ffn_layer_sizes`
+- the readout module is an MLP with hidden layer sizes passed via `--ffn_layer_sizes`
     - empty argument defaults the readout to be a linear layer
 - if using a GPU, pass the device index, eg. `--device_index 0`
 - for the `--test_every` or `--save_every` arguments
@@ -114,10 +114,10 @@ python -m sensitivity.log.single_large \
     --drop_p ${drop_p}
 ```
 
-- 20 target nodes are sampled from Cora.
-- For each of them, their 6-hop neighborhoods and the associated subgraph are computed.
-- The Jacobian of the target node's representations are computed with respect to the source node's features.
-- 25 samples are computed for each target node. In case of dropping methods, the model initialization and random masks are jointly sampled.
+- 20 target nodes are sampled from `dataset=Cora`.
+- For each target node, its 6-hop neighborhood and the corresponding subgraph is computed.
+- The Jacobian of the target node's final representation is computed with respect to the source node's features.
+- 25 model samples are computed for each target node. In case of dropping methods, the model initialization and random masks are jointly sampled.
 - The Jacobian norms are stored at `./jac-norms/i=${i}/${dropout}-${gnn}/sample-${sample}.pkl`, where `${i}` is the index of the node in the original Cora network and `${sample}` is from 1 to 25.
 - The shortest distances from source nodes are stored at `./jac-norms/i=${i}/shortest_distances.pkl`.
 

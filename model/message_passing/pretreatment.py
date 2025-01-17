@@ -1,6 +1,6 @@
 from torch import Tensor
 from torch_geometric.typing import Adj
-from torch_geometric.utils import remove_self_loops, add_self_loops, degree
+from torch_geometric.utils import remove_self_loops, add_remaining_self_loops, degree
 
 
 class ModelPretreatment:
@@ -13,8 +13,7 @@ class ModelPretreatment:
     def pretreatment(self, num_nodes: int, edge_index: Adj, dtype):
 
         if self.add_self_loops:
-            edge_index, _ = remove_self_loops(edge_index)
-            edge_index, _ = add_self_loops(edge_index, num_nodes=num_nodes)
+            edge_index, _ = add_remaining_self_loops(edge_index, num_nodes=num_nodes)
 
         edge_weight = None
         if self.normalize:

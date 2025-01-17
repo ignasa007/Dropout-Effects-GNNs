@@ -1,4 +1,4 @@
-from torch_geometric.utils import remove_self_loops, dropout_edge
+from torch_geometric.utils import dropout_edge
 from model.dropout.base import BaseDropout
 
 

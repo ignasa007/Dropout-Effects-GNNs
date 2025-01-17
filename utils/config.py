@@ -60,7 +60,7 @@ def parse_arguments(return_others=False):
         help='The dropping method.'
     )
     parser.add_argument(
-        '--drop_p', type=float, default=0.5,
+        '--drop_p', type=float, default=0.0,
         help='The dropping probability used with the dropout method.'
     )
 
@@ -132,7 +132,7 @@ def parse_arguments(return_others=False):
     i = 0
     while i < len(unknown):
         assert unknown[i].startswith('--')
-        key = unknown[i].lstrip('--'); i += 1
+        key = unknown[i].removeprefix('--'); i += 1
         if i == len(unknown):
             value = None
         else:

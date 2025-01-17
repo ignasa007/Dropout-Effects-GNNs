@@ -6,6 +6,7 @@ from torch_geometric.utils import to_undirected, remove_self_loops, to_scipy_spa
 from model import Model as Base
 
 
+# TODO: I think functionality broke because A is a sparse matrix now, but we need the dense matrix in some places.
 def to_adj_mat(edge_index, num_nodes=None, undirected=True, assert_connected=True):
 
     if num_nodes is None:
@@ -13,7 +14,7 @@ def to_adj_mat(edge_index, num_nodes=None, undirected=True, assert_connected=Tru
     if undirected:
         edge_index = to_undirected(edge_index, num_nodes=num_nodes)
 
-    A = to_scipy_sparse_matrix(remove_self_loops(edge_index)[0])
+    A = to_scipy_sparse_matrix(remove_self_loops(edge_index)[0])    # TODO: should we be removing self loops?
     if assert_connected:
         assert connected_components(A, directed=False, return_labels=False) == 1
 

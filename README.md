@@ -39,9 +39,9 @@ This is the official code repository for the paper [**Effects of Random Edge-Dro
 ## Setup
 
 ```bash
-conda create --name ${env_name} python=3.8
+conda create --name ${env_name} python=3.9
 conda activate ${env_name}
-pip install -r requirements.txt
+pip install -r requirements_${os}.txt
 ```
 
 ## Execution

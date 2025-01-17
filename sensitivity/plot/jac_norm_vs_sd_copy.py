@@ -40,7 +40,7 @@ for dropout, dataset, gnn, L, drop_p in tqdm(models):
             
             jac_norms = torch.load(f'{i_dir}/{sample}')
             y_sd = bin_jac_norms(jac_norms, shortest_distances, x_sd, agg='sum')
-            sum_jac_norms[int(sample.lstrip('sample-').rstrip('.pkl'))-1, x_sd] += y_sd
+            sum_jac_norms[int(sample.removeprefix('sample-').removesuffix('.pkl'))-1, x_sd] += y_sd
 
     # average over source nodes in a single large network, or multiple small graphs
     mean_jac_norms = sum_jac_norms / count_jac_norms

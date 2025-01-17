@@ -40,9 +40,8 @@ for m in tqdm(range(MOLECULE_SAMPLES)):
             continue
         break
 
-    # edge_index = torch.Tensor([[0, 1, 1, 1, 2, 2, 3, 3], [1, 0, 2, 3, 1, 3, 1, 2]]).type(torch.int64)
     degrees = degree(edge_index[0])
-    A = to_adj_mat(edge_index, assert_connected=False)
+    A = to_adj_mat(edge_index, assert_connected=False)  # TODO: remove self loops here
     x_sd = shortest_distances.unique().int()
     x_sd = x_sd[x_sd<=L]
     

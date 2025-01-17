@@ -10,7 +10,7 @@ from tqdm import tqdm
 import numpy as np
 import torch
 from torch_geometric.datasets import TUDataset
-from torch_geometric.utils import degree, add_self_loops, dropout_edge
+from torch_geometric.utils import degree, add_remaining_self_loops, dropout_edge
 import matplotlib.pyplot as plt
 
 from sensitivity.utils import to_adj_mat, compute_shortest_distances, bin_jac_norms
@@ -52,7 +52,7 @@ for m in tqdm(range(MOLECULE_SAMPLES)):
         
         for _ in range(DROPEDGE_SAMPLES):
         
-            dropped_edge_index = add_self_loops(dropout_edge(edge_index, p, force_undirected=False)[0])[0]
+            dropped_edge_index = add_remaining_self_loops(dropout_edge(edge_index, p, force_undirected=False)[0])[0]
             A = to_adj_mat(dropped_edge_index, num_nodes=molecule.num_nodes, undirected=False, assert_connected=False)
         
             out_deg_inv_sqrt = degree(dropped_edge_index[0], num_nodes=molecule.num_nodes).pow(-0.5)

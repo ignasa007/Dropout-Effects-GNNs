@@ -13,7 +13,7 @@ cycler==0.12.1
 Cython==3.0.10
 debugpy==1.6.6
 decorator==5.1.1
-dgl @ https://data.dgl.ai/wheels/torch-2.3/repo.html
+dgl @ https://data.dgl.ai/wheels/torch-2.3/dgl-2.3.0-cp39-cp39-manylinux1_x86_64.whl
 executing==1.2.0
 filelock
 fonttools==4.53.0

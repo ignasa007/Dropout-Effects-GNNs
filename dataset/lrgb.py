@@ -31,7 +31,7 @@ class LRGBDataset(BaseDataset):
         self.task_name = 'node-c'
         self.num_features = train.num_features
         self.num_classes = train.num_classes
-        super(LRGBDataset, self).__init__(self.task_name)
+        super(LRGBDataset, self).__init__(self.task_name, device)
 
     def train(self, model: Model, optimizer: Optimizer) -> Dict[str, float]:
 

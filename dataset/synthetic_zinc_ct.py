@@ -102,7 +102,7 @@ class SyntheticZINC_CT(BaseDataset):
         self.task_name = 'graph-r'
         self.num_features = 1
         self.num_classes = 1
-        super(SyntheticZINC_CT, self).__init__(self.task_name)
+        super(SyntheticZINC_CT, self).__init__(self.task_name, device)
 
     def train(self, model: Model, optimizer: Optimizer) -> Dict[str, float]:
 

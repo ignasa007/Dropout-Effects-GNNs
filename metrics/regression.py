@@ -1,11 +1,11 @@
-from torch import Tensor
+from torch import Tensor, device
 from torchmetrics import MeanAbsoluteError, MeanAbsolutePercentageError, MeanSquaredError
 from metrics.base import Metrics
 
 
 class Regression(Metrics):
 
-    def __init__(self, num_classes: int):
+    def __init__(self, num_classes: int, device: device):
 
         # TODO: problem is that we want to compute the metrics dimension-wise
         #   in case of multi-ouput regression (like QM9)
@@ -13,9 +13,9 @@ class Regression(Metrics):
 
         super(Regression, self).__init__()
 
-        self.mean_absolute_error = MeanAbsoluteError()
-        self.mean_absolute_percentage_error = MeanAbsolutePercentageError()
-        self.mean_squared_error = MeanSquaredError()
+        self.mean_absolute_error = MeanAbsoluteError().to(device)
+        self.mean_absolute_percentage_error = MeanAbsolutePercentageError().to(device)
+        self.mean_squared_error = MeanSquaredError().to(device)
 
     def reset(self):
 

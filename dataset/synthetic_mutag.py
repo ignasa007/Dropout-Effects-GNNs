@@ -58,7 +58,7 @@ class SyntheticMUTAG(BaseDataset):
             shuffle=True
         )
         
-        super(SyntheticMUTAG, self).__init__(self.task_name)
+        super(SyntheticMUTAG, self).__init__(self.task_name, device)
 
     def train(self, model: Model, optimizer: Optimizer) -> Dict[str, float]:
 

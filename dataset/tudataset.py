@@ -27,7 +27,7 @@ class TUDataset(BaseDataset):
         self.task_name = 'graph-c'
         self.num_features = dataset.num_features
         self.num_classes = dataset.num_classes
-        super(TUDataset, self).__init__(self.task_name)
+        super(TUDataset, self).__init__(self.task_name, device)
 
     def train(self, model: Model, optimizer: Optimizer) -> Dict[str, float]:
 

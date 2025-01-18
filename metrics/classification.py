@@ -9,7 +9,7 @@ from metrics.base import Metrics
 
 class Classification(Metrics):
 
-    def __init__(self, num_classes: int):
+    def __init__(self, num_classes: int, device: torch.device):
 
         super(Classification, self).__init__()
 
@@ -19,15 +19,15 @@ class Classification(Metrics):
         if num_classes == 2:
             self.nonlinearity = torch.sigmoid
             self.loss_fn = lambda input, target: BCEWithLogitsLoss(reduction='sum')(input, target.float())
-            self.accuracy_fn = BinaryAccuracy()
-            self.f1score_fn = BinaryF1Score()
-            self.auroc_fn = BinaryAUROC()
+            self.accuracy_fn = BinaryAccuracy().to(device)
+            self.f1score_fn = BinaryF1Score().to(device)
+            self.auroc_fn = BinaryAUROC().to(device)
         elif num_classes > 2:
             self.nonlinearity = lambda probs: torch.softmax(probs, dim=-1)
             self.loss_fn = CrossEntropyLoss(reduction='sum')
-            self.accuracy_fn = MulticlassAccuracy(num_classes)
-            self.f1score_fn = MulticlassF1Score(num_classes)
-            self.auroc_fn = MulticlassAUROC(num_classes)
+            self.accuracy_fn = MulticlassAccuracy(num_classes).to(device)
+            self.f1score_fn = MulticlassF1Score(num_classes).to(device)
+            self.auroc_fn = MulticlassAUROC(num_classes).to(device)
         else:
             raise ValueError(f'Expected `num_classes` to be >1 (got {num_classes}).')
         
@@ -52,6 +52,7 @@ class Classification(Metrics):
 
         # other metrics expect (rather, can work with) probabilities, but not logits
         preds = self.nonlinearity(input)
+
         self.accuracy_fn.update(preds, target)
         self.f1score_fn.update(preds, target)
         self.auroc_fn.update(preds, target)

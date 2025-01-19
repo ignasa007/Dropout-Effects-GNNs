@@ -26,13 +26,13 @@ class Logger:
         os.makedirs(self.exp_dir)
         
         self.log(''.join(f'{k} = {v}\n' for k, v in vars(config).items()), with_time=False)
-        with open(f'{self.exp_dir}/config.pkl', 'wb') as f:
-            pickle.dump(config, f, protocol=pickle.HIGHEST_PROTOCOL)
+        # with open(f'{self.exp_dir}/config.pkl', 'wb') as f:
+        #     pickle.dump(config, f, protocol=pickle.HIGHEST_PROTOCOL)
         
         if others is not None:
             self.log(''.join(f'{k} = {v}\n' for k, v in vars(others).items()), with_time=False)
-        with open(f'{self.exp_dir}/others.pkl', 'wb') as f:
-            pickle.dump(others, f, protocol=pickle.HIGHEST_PROTOCOL)
+        # with open(f'{self.exp_dir}/others.pkl', 'wb') as f:
+        #     pickle.dump(others, f, protocol=pickle.HIGHEST_PROTOCOL)
 
         self.pickle_dir = None
         self.array_dir = None

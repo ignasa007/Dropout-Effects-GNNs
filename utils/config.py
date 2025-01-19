@@ -69,7 +69,7 @@ def parse_arguments(return_others=False):
         help='Number of epochs to train the model for.'
     )
     parser.add_argument(
-        '--learning_rate', type=float, default=3e-3,
+        '--learning_rate', type=float, default=1e-3,
         help='Learning rate for Adam optimizer.'
     )
     parser.add_argument(
@@ -103,11 +103,15 @@ def parse_arguments(return_others=False):
     
     parser.add_argument(
         '--gt_depth', type=int,
-        help='Depth of the ground-truth function (in case dataset is SyntheticMUTAG).'
+        help='Depth of the ground-truth function (when dataset is SyntheticMUTAG).'
     )
     parser.add_argument(
         '--alpha', type=float,
-        help='Commute times percentile (in case dataset is SyntheticZINC_CT).'
+        help='Commute times percentile (when dataset is SyntheticZINC_CT).'
+    )
+    parser.add_argument(
+        '--distance', type=float,
+        help='Shortest distance between node pairs (when dataset is SyntheticZINC_SD).'
     )
 
     parser.add_argument(
@@ -124,7 +128,7 @@ def parse_arguments(return_others=False):
     )
     parser.add_argument(
         '--pooler', type=str, choices=['mean', 'add', 'max'],
-        help='Method used to pool node embeddings when task is at the graph-level.'
+        help='Method used to pool node embeddings (when task is at the graph-level).'
     )
     
     others, unknown = parser.parse_known_args()

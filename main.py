@@ -1,4 +1,5 @@
-from tqdm import tqdm, tqdm
+from tqdm import tqdm
+import warnings; warnings.filterwarnings('ignore')
 
 import torch
 from torch.optim import Adam

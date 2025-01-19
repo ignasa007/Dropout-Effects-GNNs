@@ -1,16 +1,12 @@
-from typing import Dict
-
 import torch
 from torch_geometric.datasets import TUDataset as TUDatasetTorch
-from torch.optim import Optimizer
 
 from dataset.constants import root, batch_size
-from dataset.base import BaseDataset
+from dataset.base import Inductive
 from dataset.utils import split_dataset, create_loaders
-from model import Model
 
 
-class TUDataset(BaseDataset):
+class TUDataset(Inductive):
 
     def __init__(self, name: str, device: torch.device, **kwargs):
 
@@ -28,37 +24,6 @@ class TUDataset(BaseDataset):
         self.num_features = dataset.num_features
         self.num_classes = dataset.num_classes
         super(TUDataset, self).__init__(self.task_name, device)
-
-    def train(self, model: Model, optimizer: Optimizer) -> Dict[str, float]:
-
-        model.train()
-
-        for batch in self.train_loader:
-            optimizer.zero_grad()
-            out = model(batch.x, batch.edge_index, batch.batch)
-            train_loss = self.compute_loss(out, batch.y)
-            train_loss.backward()
-            optimizer.step()
-
-        train_metrics = self.compute_metrics()
-        return train_metrics
-    
-    @torch.no_grad()
-    def eval(self, model: Model):
-
-        model.eval()
-        
-        for batch in self.val_loader:
-            out = model(batch.x, batch.edge_index, batch.batch)
-            self.compute_loss(out, batch.y)
-        val_metrics = self.compute_metrics()
-
-        for batch in self.test_loader:
-            out = model(batch.x, batch.edge_index, batch.batch)
-            self.compute_loss(out, batch.y)
-        test_metrics = self.compute_metrics()
-
-        return val_metrics, test_metrics
     
 
 class Proteins(TUDataset):

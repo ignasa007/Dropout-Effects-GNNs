@@ -20,7 +20,7 @@ class PreTransform:
         config.drop_p = 0.0
         
         self.model = Model(config, others)
-        state_dict = torch.load(f'{root}/MUTAG/L={others.gt_depth}/ckpt-500.pt')
+        state_dict = torch.load(f'{root}/Mutag/L={others.gt_depth}/ckpt-500.pt')
         self.model.load_state_dict(state_dict)
         
         self.model.train()
@@ -32,7 +32,7 @@ class PreTransform:
         return data
 
 
-class SyntheticMUTAG(Inductive):
+class SyntheticMutag(Inductive):
 
     def __init__(self, config: Namespace, others: Namespace, device: torch.device):
 
@@ -44,7 +44,7 @@ class SyntheticMUTAG(Inductive):
 
         dataset = TUDatasetTorch(
             root=root,
-            name='MUTAG',
+            name='Mutag',
             use_node_attr=True,
             pre_transform=PreTransform(config, others)
         ).to(device)
@@ -56,4 +56,4 @@ class SyntheticMUTAG(Inductive):
             shuffle=True
         )
         
-        super(SyntheticMUTAG, self).__init__(self.task_name, device)
+        super(SyntheticMutag, self).__init__(self.task_name, device)

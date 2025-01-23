@@ -11,7 +11,7 @@ class BaseHead(Module):
 
         super(BaseHead, self).__init__()
 
-        if others.task_name.startswith('graph'):
+        if others.task_name.lower().startswith('graph'):
             from model.readout.utils import get_pooler
             self.pooler = get_pooler(others.pooler)
         

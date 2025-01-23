@@ -1,7 +1,8 @@
 format_dataset_name = {
     'cora': 'Cora', 'citeseer': 'CiteSeer', 'pubmed': 'PubMed',
-    'qm9': 'QM9', 'proteins': 'Proteins', 'ptc': 'PTC', 'mutag': 'MUTAG',
-    'syntheticzinc_ct': 'SyntheticZINC_CT', 'syntheticzinc_sd': 'SyntheticZINC_SD', 'syntheticmutag': 'SyntheticMUTAG',
+    'qm9': 'QM9', 'proteins': 'Proteins', 'ptc': 'PTC', 'mutag': 'Mutag',
+    'reddit': 'Reddit', 'imdb': 'IMDb', 'collab': 'Collab',
+    'syntheticzinc_ct': 'SyntheticZINC_CT', 'syntheticzinc_sd': 'SyntheticZINC_SD', 'syntheticmutag': 'SyntheticMutag',
     'chameleon': 'Chameleon', 'crocodile': 'Crocodile', 'squirrel': 'Squirrel',
     'cornell': 'Cornell', 'texas': 'Texas', 'wisconsin': 'Wisconsin',
     'twitchde': 'TwitchDE',
@@ -16,9 +17,10 @@ format_task_name = {
 
 format_layer_name = {
     'gcn': 'GCN',
-    'gat': 'GAT',
-    'appnp': 'APPNP',
     'resgcn': 'ResGCN',
+    'gat': 'GAT',
+    'gin': 'GIN',
+    'appnp': 'APPNP',
 }
 
 format_dropout_name = {

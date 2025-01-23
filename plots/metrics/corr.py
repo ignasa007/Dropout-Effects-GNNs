@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from utils.parse_logs import parse_metrics
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, required=True, choices=['Cora', 'CiteSeer', 'Proteins', 'MUTAG', 'PTC'])
+parser.add_argument('--dataset', type=str, required=True, choices=['Cora', 'CiteSeer', 'Proteins', 'Mutag', 'PTC'])
 parser.add_argument('--metric', type=str, required=True, choices=['Cross Entropy Loss', 'Accuracy', 'F1 Score'])
 parser.add_argument('--gnns', nargs='+', default=('GCN',))
 parser.add_argument('--which', type=str, default=['Best'], choices=['Best', 'Final'])

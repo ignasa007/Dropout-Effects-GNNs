@@ -10,7 +10,7 @@ from utils.format import format_dataset_name
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, required=True, choices=['Cora', 'CiteSeer', 'Proteins', 'MUTAG'])
+parser.add_argument('--dataset', type=str, required=True, choices=['Cora', 'CiteSeer', 'Proteins', 'Mutag'])
 args = parser.parse_args()
 
 NODE_SAMPLES = 100
@@ -31,7 +31,7 @@ if args.dataset in ('Cora', 'CiteSeer'):
     mask = indices
     target = input.y[mask]
 
-elif args.dataset in ('Proteins', 'MUTAG'):
+elif args.dataset in ('Proteins', 'Mutag'):
 
     from torch_geometric.datasets import TUDataset
     from dataset.utils import normalize_features

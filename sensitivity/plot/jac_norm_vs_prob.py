@@ -13,7 +13,7 @@ from utils.format import format_dataset_name
 L = 6
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, required=True, choices=['Cora', 'CiteSeer', 'Proteins', 'MUTAG'])
+parser.add_argument('--dataset', type=str, required=True, choices=['Cora', 'CiteSeer', 'Proteins', 'Mutag'])
 parser.add_argument('--agg', type=str, default='mean', choices=['mean', 'sum'])
 parser.add_argument('--min_dist', type=int, default=0)
 parser.add_argument('--max_dist', type=int, default=L)

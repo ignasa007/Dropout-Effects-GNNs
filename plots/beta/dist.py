@@ -6,7 +6,7 @@ from torch_geometric.utils import to_scipy_sparse_matrix, to_undirected, degree
 from scipy.sparse.csgraph import connected_components
 import matplotlib.pyplot as plt
 
-datasets = ('Proteins', 'MUTAG') # , 'PTC_MR')
+datasets = ('Proteins', 'Mutag') # , 'PTC_MR')
 Ps = (0.2, 0.4, 0.6, 0.8)
 fig, axs = plt.subplots(1, len(datasets), figsize=(6.4*len(datasets), 4.8), sharey=True)
 if not hasattr(axs, '__len__'): axs = (axs,)

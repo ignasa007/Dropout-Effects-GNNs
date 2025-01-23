@@ -10,13 +10,13 @@ from tqdm import tqdm
 import numpy as np
 import torch
 from torch_geometric.datasets import TUDataset
-from torch_geometric.utils import degree
+from torch_geometric.utils import degree, remove_self_loops
 import matplotlib.pyplot as plt
 
 from sensitivity.utils import to_adj_mat, compute_shortest_distances, bin_jac_norms
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, required=True, choices=['Proteins', 'MUTAG'])
+parser.add_argument('--dataset', type=str, required=True, choices=['Proteins', 'Mutag'])
 args = parser.parse_args()
 
 L = 6; ls = range(L+1)
@@ -33,15 +33,15 @@ for m in tqdm(range(MOLECULE_SAMPLES)):
 
     while True:
         i = np.random.choice(indices)
-        edge_index = dataset[i].edge_index
+        edge_index = remove_self_loops(dataset[i].edge_index)
         try:
             shortest_distances = compute_shortest_distances(edge_index).flatten()
         except AssertionError:
             continue
         break
 
-    degrees = degree(edge_index[0])
-    A = to_adj_mat(edge_index, assert_connected=False)  # TODO: remove self loops here
+    degrees = degree(edge_index[1]) # needs to be without self-loops
+    A = to_adj_mat(edge_index)
     x_sd = shortest_distances.unique().int()
     x_sd = x_sd[x_sd<=L]
     
@@ -52,7 +52,7 @@ for m in tqdm(range(MOLECULE_SAMPLES)):
         
         non_diag = non_diag.unsqueeze(dim=1).repeat(1, degrees.size(0)) * A
         diag = torch.diag(diag)
-        P_p = torch.where(diag>0., diag, non_diag)
+        P_p = torch.where(diag>0., diag, non_diag)  # doesn't matter if A is with self-loops or not
         P_p_L = torch.matrix_power(P_p, L).flatten()
         
         y_sd = bin_jac_norms(P_p_L, shortest_distances, x_sd, agg='mean')

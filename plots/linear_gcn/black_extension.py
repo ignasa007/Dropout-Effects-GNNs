@@ -10,13 +10,13 @@ from tqdm import tqdm
 import numpy as np
 import torch
 from torch_geometric.datasets import TUDataset
-from torch_geometric.utils import degree
+from torch_geometric.utils import degree, remove_self_loops
 import matplotlib.pyplot as plt
 
 from sensitivity.utils import to_adj_mat, compute_shortest_distances, bin_jac_norms
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, required=True, choices=['Proteins', 'MUTAG'])
+parser.add_argument('--dataset', type=str, required=True, choices=['Proteins', 'Mutag'])
 args = parser.parse_args()
 
 L = 6; ls = range(L+1)
@@ -33,7 +33,7 @@ for m in tqdm(range(MOLECULE_SAMPLES)):
 
     while True:
         i = np.random.choice(indices)
-        edge_index = dataset[i].edge_index
+        edge_index = remove_self_loops(dataset[i].edge_index)
         try:
             shortest_distances = compute_shortest_distances(edge_index).flatten()
         except AssertionError:
@@ -41,8 +41,8 @@ for m in tqdm(range(MOLECULE_SAMPLES)):
         break
 
     # edge_index = torch.Tensor([[0, 1, 1, 1, 2, 2, 3, 3], [1, 0, 2, 3, 1, 3, 1, 2]]).type(torch.int64)
-    degrees = degree(edge_index[0])
-    A = to_adj_mat(edge_index, assert_connected=False)
+    degrees = degree(edge_index[1])
+    A = to_adj_mat(edge_index)
     x_sd = shortest_distances.unique().int()
     x_sd = x_sd[x_sd<=L]
     

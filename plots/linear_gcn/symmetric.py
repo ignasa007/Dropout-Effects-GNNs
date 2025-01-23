@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from sensitivity.utils import to_adj_mat, compute_shortest_distances, bin_jac_norms
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, required=True, choices=['Proteins', 'MUTAG'])
+parser.add_argument('--dataset', type=str, required=True, choices=['Proteins', 'Mutag'])
 args = parser.parse_args()
 
 L = 6; ls = range(L+1)
@@ -53,7 +53,7 @@ for m in tqdm(range(MOLECULE_SAMPLES)):
         for _ in range(DROPEDGE_SAMPLES):
         
             dropped_edge_index = add_remaining_self_loops(dropout_edge(edge_index, p, force_undirected=False)[0])[0]
-            A = to_adj_mat(dropped_edge_index, num_nodes=molecule.num_nodes, undirected=False, assert_connected=False)
+            A = to_adj_mat(dropped_edge_index, num_nodes=molecule.num_nodes)
         
             out_deg_inv_sqrt = degree(dropped_edge_index[0], num_nodes=molecule.num_nodes).pow(-0.5)
             out_deg_inv_sqrt[out_deg_inv_sqrt == float('inf')] = 0

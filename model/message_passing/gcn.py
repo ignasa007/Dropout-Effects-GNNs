@@ -22,6 +22,7 @@ class GCNLayer(GCNConv):
         activation: Module,
         add_self_loops: bool = True,
         normalize: bool = True,
+        bias: bool = True,
         others: Optional[Namespace] = None,
     ):
 
@@ -30,6 +31,7 @@ class GCNLayer(GCNConv):
             out_channels=out_channels,
             add_self_loops=add_self_loops,
             normalize=normalize,
+            bias=bias,
         )
         
         self.pt = ModelPretreatment(add_self_loops, normalize)
@@ -44,7 +46,7 @@ class GCNLayer(GCNConv):
         return x
     
     def treat_adj_mat(self, edge_index, num_nodes, dtype):
-
+        
         edge_index, _ = self.drop_strategy.apply_adj_mat(edge_index, None, self.training)
         edge_index, edge_weight = self.pt.pretreatment(num_nodes, edge_index, dtype)
 

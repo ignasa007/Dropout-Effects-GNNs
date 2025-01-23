@@ -17,6 +17,7 @@ class APPNPLayer(GCNLayer):
         activation: Module,
         add_self_loops: bool = True,
         normalize: bool = True,
+        bias: bool = True,
         others: Optional[Namespace] = None,
     ):
 
@@ -27,6 +28,7 @@ class APPNPLayer(GCNLayer):
             activation=activation,
             add_self_loops=add_self_loops,
             normalize=normalize,
+            bias=bias,
             others=others,
         )
 

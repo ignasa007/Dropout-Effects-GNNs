@@ -33,6 +33,7 @@ class Model(Module):
                 activation=activation,
                 add_self_loops=config.add_self_loops,
                 normalize=config.normalize,
+                bias=config.bias,
                 others=others,
             ))
 

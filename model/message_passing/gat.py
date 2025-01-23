@@ -22,15 +22,19 @@ class GATLayer(GATConv):
         activation: Module,
         add_self_loops: bool = True,
         normalize: bool = True,
+        bias: bool = True,
         others: Optional[Namespace] = None,
     ):
 
+        assert out_channels % others.attention_heads == 0
+        
         super(GATLayer, self).__init__(
             in_channels=in_channels,
-            out_channels=out_channels,
+            out_channels=out_channels//others.attention_heads,
             heads=others.attention_heads,
-            concat=False,
+            concat=True,
             add_self_loops=add_self_loops,
+            bias=bias,
         )
 
         self.pt = ModelPretreatment(add_self_loops, normalize)
@@ -54,7 +58,7 @@ class GATLayer(GATConv):
     def message_passing(self, edge_index, x, alpha):
 
         out = self.propagate(edge_index, x=x, alpha=alpha)
-        out = out.mean(dim=1)   # average over heads
+        out = out.flatten(start_dim=1)  # concatenate heads
         
         return out
     
@@ -73,7 +77,7 @@ class GATLayer(GATConv):
         x = self.feature_transformation(x)
 
         # SOURCE AND TARGET FEATURES
-        x_src = x_dst = x.view(-1, self.heads, self.out_channels)
+        x_src = x_dst = x.view(-1, self.heads, self.out_channels)   # split heads
         x = (x_src, x_dst)
         # SOURCE AND TARGET ATTENTION WEIGHTS
         alpha_src = (x_src*self.att_src).sum(dim=-1)

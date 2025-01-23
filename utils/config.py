@@ -1,5 +1,6 @@
 import argparse
-
+from utils.format import format_dataset_name, format_layer_name, \
+    format_dropout_name, format_activation_name
 
 def layer_sizes(args):
 
@@ -22,6 +23,7 @@ def parse_arguments(return_others=False):
 
     parser.add_argument(
         '--dataset', type=str, required=True,
+        # action=lambda dataset: format_dataset_name.get(dataset.lower()),
         help='The dataset to be trained on.'
     )
     parser.add_argument(
@@ -35,6 +37,7 @@ def parse_arguments(return_others=False):
 
     parser.add_argument(
         '--gnn', type=str, required=True,
+        # action=lambda gnn: format_layer_name.get(gnn.lower()),
         help='The backbone model.'
     )
     parser.add_argument(
@@ -43,7 +46,12 @@ def parse_arguments(return_others=False):
     )
     parser.add_argument(
         '--gnn_activation', type=str, default='ReLU',
+        # action=lambda activation: format_activation_name.get(activation.lower()),
         help='The non-linearity to use for message-passing.'
+    )
+    parser.add_argument(
+        '--bias', type=bool, default=True,
+        help='Boolean value indicating whether to add bias after message aggregation.'
     )
 
     parser.add_argument(
@@ -52,11 +60,13 @@ def parse_arguments(return_others=False):
     )
     parser.add_argument(
         '--ffn_activation', type=str, default='ReLU',
+        # action=lambda activation: format_activation_name.get(activation.lower()),
         help='The non-linearity to use for readout.'
     )
 
     parser.add_argument(
         '--dropout', type=str, required=True,
+        # action=lambda dropout: format_dropout_name.get(dropout.lower()),
         help='The dropping method.'
     )
     parser.add_argument(
@@ -73,7 +83,7 @@ def parse_arguments(return_others=False):
         help='Learning rate for Adam optimizer.'
     )
     parser.add_argument(
-        '--weight_decay', type=float, default=5e-4,
+        '--weight_decay', type=float, default=0,
         help='Weight decay for Adam optimizer.'
     )
 
@@ -103,7 +113,7 @@ def parse_arguments(return_others=False):
     
     parser.add_argument(
         '--gt_depth', type=int,
-        help='Depth of the ground-truth function (when dataset is SyntheticMUTAG).'
+        help='Depth of the ground-truth function (when dataset is SyntheticMutag).'
     )
     parser.add_argument(
         '--alpha', type=float,
@@ -117,6 +127,10 @@ def parse_arguments(return_others=False):
     parser.add_argument(
         '--attention_heads', type=int,
         help='Number of attention heads (when GNN is GAT).'
+    )
+    parser.add_argument(
+        '--eps', type=float,
+        help='Extra weight of self-loops (when GNN is GIN).'
     )
     parser.add_argument(
         '--power_iter', type=int,

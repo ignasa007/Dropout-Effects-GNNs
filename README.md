@@ -44,6 +44,11 @@ conda activate ${env_name}
 pip install -r requirements_${os}.txt
 ```
 
+PyG>=2.5.0 has an error in the file `torch_geometric.io.fs` at line 193 (see [issue](https://github.com/pyg-team/pytorch_geometric/issues/9330)). Change it to
+```python
+fs1.mv(path1, path2, recursive=recursive)
+```
+
 ## Execution
 
 To train a model, execute
@@ -63,8 +68,8 @@ python -B main.py \
 ```
 
 See `config.py` for the full list of command line arguments.
-- `${dataset}` can be one of Cora, CiteSeer, PubMed, Proteins, MUTAG and PTC.
-- `${gnn}` can be one of GCN, ResGCN, GAT and APPNP
+- `${dataset}` can be one of Cora, CiteSeer, PubMed, Proteins, Mutag and PTC.
+- `${gnn}` can be one of GCN, ResGCN, GAT, GIN and APPNP
     - is using GAT, pass the number of attention heads, eg. `--attention_heads 2`
     - if using APPNP, pass the number of power iteration steps and the teleport probability, eg. `--power_iter 10 --teleport_p 0.1`
 - the hidden layer sizes can be passed via `--gnn_layer_sizes`, eg. `64 32 16` or even `64*3 32*2 16*1`
@@ -86,7 +91,7 @@ python -m plots.linear_gcn.asymmetric --dataset ${dataset}   # left and middle p
 python -m plots.linear_gcn.compare_drop --dataset ${dataset} # right plot
 ```
 
-- `${dataset}` can be one of Proteins and MUTAG. Technically, PTC can work as well, but it only has 188 graphs, and we report results for 200 graphs in the manuscript. The implementations can only use these datasets right now because PyG has a common API for them, but one can edit the line `dataset = TUDataset(...)` to use any other suitable dataset. Importantly, the dataset must have small graphs for fast sensitivity computation.
+- `${dataset}` can be one of Proteins and Mutag. Technically, PTC can work as well, but it only has 188 graphs, and we report results for 200 graphs in the manuscript. The implementations can only use these datasets right now because PyG has a common API for them, but one can edit the line `dataset = TUDataset(...)` to use any other suitable dataset. Importantly, the dataset must have small graphs for fast sensitivity computation.
 - The image files are stored at `./assets/linear-gcn/asymmetric/${dataset}.png` and `./assets/linear-gcn/compare-drop/${dataset}.png`, respectively.
 
 **Table 2**

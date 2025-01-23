@@ -1,11 +1,11 @@
 from dataset.base import BaseDataset
 from dataset.planetoid import Cora, CiteSeer, PubMed
 from dataset.qm9 import QM9
-from dataset.tudataset import Proteins, PTC, MUTAG
+from dataset.tudataset import Proteins, PTC, Mutag, Reddit, IMDb, Collab
 from dataset.lrgb import Pascal
 from dataset.synthetic_zinc_ct import SyntheticZINC_CT
 from dataset.synthetic_zinc_sd import SyntheticZINC_SD
-from dataset.synthetic_mutag import SyntheticMUTAG
+from dataset.synthetic_mutag import SyntheticMutag
 from dataset.twitch import TwitchDE
 from dataset.actor import Actor
 from dataset.wikipedia import Chameleon, Crocodile, Squirrel
@@ -16,12 +16,21 @@ from dataset.deezer import Deezer
 def get_dataset(dataset_name: str, **kwargs) -> BaseDataset:
 
     dataset_map = {
+        # citation networks
         'cora': Cora, 'citeseer': CiteSeer, 'pubmed': PubMed,
-        'qm9': QM9, 'proteins': Proteins, 'ptc': PTC, 'mutag': MUTAG,
-        'syntheticzinc_ct': SyntheticZINC_CT, 'syntheticzinc_sd': SyntheticZINC_SD, 'syntheticmutag': SyntheticMUTAG,
+        # biomed networks
+        'qm9': QM9, 'proteins': Proteins, 'ptc': PTC, 'mutag': Mutag,
+        # social networks
+        'reddit': Reddit, 'imdb': IMDb, 'collab': Collab,
+        # synthetic networks
+        'syntheticzinc_ct': SyntheticZINC_CT, 'syntheticzinc_sd': SyntheticZINC_SD, 'syntheticmutag': SyntheticMutag,
+        # wikipedia networks
         'chameleon': Chameleon, 'crocodile': Crocodile, 'squirrel': Squirrel,
+        # web-kb networks
         'cornell': Cornell, 'texas': Texas, 'wisconsin': Wisconsin,
+        # twitch networks
         'twitchde': TwitchDE,
+        # others
         'pascal': Pascal, 'actor': Actor, 'deezer': Deezer,
     }
     

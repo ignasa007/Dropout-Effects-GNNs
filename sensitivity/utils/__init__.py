@@ -1,41 +1,53 @@
 from scipy.sparse.csgraph import connected_components, shortest_path
 import torch
 from torch.func import jacrev
-from torch_geometric.utils import to_undirected, remove_self_loops, to_scipy_sparse_matrix
+from torch_geometric.utils.num_nodes import maybe_num_nodes
+from torch_geometric.utils import degree, is_undirected, to_undirected, \
+    remove_self_loops, to_scipy_sparse_matrix
 
-from model import Model as Base
 
+def is_connected(edge_index):
+    
+    return connected_components(to_scipy_sparse_matrix(edge_index), directed=False, return_labels=False) == 1
 
-# TODO: I think functionality broke because A is a sparse matrix now, but we need the dense matrix in some places.
-def to_adj_mat(edge_index, num_nodes=None, undirected=True, assert_connected=True):
+def to_adj_mat(edge_index, num_nodes=None, undirected=False):
+    
+    num_nodes = num_nodes if isinstance(num_nodes, int) else maybe_num_nodes(edge_index)
+    A = torch.full((num_nodes, num_nodes), 0.)
 
-    if num_nodes is None:
-        num_nodes = (edge_index.max()+1).item()
     if undirected:
         edge_index = to_undirected(edge_index, num_nodes=num_nodes)
-
-    A = to_scipy_sparse_matrix(remove_self_loops(edge_index)[0])    # TODO: should we be removing self loops?
-    if assert_connected:
-        assert connected_components(A, directed=False, return_labels=False) == 1
-
+    edge_index = edge_index.type(torch.int64)
+    A[edge_index[0], edge_index[1]] = 1.
+    
     return A
 
-def compute_shortest_distances(edge_index, num_nodes=None, undirected=True, assert_connected=True):
+def compute_shortest_distances(edge_index, num_nodes=None, undirected=True):
+    # TODO: check that all function calls expect tensor output and not array
+    if undirected:
+        edge_index = to_undirected(edge_index, num_nodes=num_nodes)
+    
+    return torch.from_numpy(shortest_path(to_scipy_sparse_matrix(edge_index)))
 
-    A = to_adj_mat(edge_index, num_nodes, undirected, assert_connected)
-    shortest_distances = torch.from_numpy(shortest_path(A))
+def compute_commute_times(edge_index, P=0.):
     
-    return shortest_distances
+    assert is_undirected(edge_index)
+    assert is_connected(edge_index)
+    
+    # Can alternatively add remaining self loops, since D-A remains unchanged
+    edge_index = remove_self_loops(edge_index)[0]
+    A = to_adj_mat(edge_index, undirected=True)
 
+    degrees = degree(edge_index[1])
+    L = torch.diag(degrees) - A
+    
+    # Can also use torch.linalg.pinv(L+1/A.size(0))) -- I didn't see any diff for simple test cases
+    L_pinv = torch.linalg.pinv(L)
+    L_pinv_diag = torch.diag(L_pinv)
+    beta = torch.sum(degrees / (1 - P**degrees))
+    C = beta * (L_pinv_diag.unsqueeze(0) + L_pinv_diag.unsqueeze(1) - 2*L_pinv)
 
-class Model(Base):
-    
-    def forward(self, mask, edge_index, x):
-    
-        for mp_layer in self.message_passing:
-            x = mp_layer(x, edge_index)
-    
-        return x if mask is None else x[mask, ...]    # self.readout(x, mask=mask)
+    return C
 
 def get_jacobian_norms(x, edge_index, mask, model, n_samples, config, others):
 

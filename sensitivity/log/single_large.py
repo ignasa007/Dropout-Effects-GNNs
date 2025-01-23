@@ -4,11 +4,22 @@ from tqdm import tqdm
 import numpy as np
 from scipy.sparse.csgraph import connected_components, shortest_path
 import torch
-from torch_geometric.utils import subgraph
+from torch_geometric.utils import subgraph, to_scipy_sparse_matrix
 
-from dataset import get_dataset
 from utils.config import parse_arguments
-from sensitivity.utils import to_adj_mat, Model, get_jacobian_norms
+from dataset import get_dataset
+from model import Model as Base
+from sensitivity.utils import get_jacobian_norms
+
+
+class Model(Base):
+    
+    def forward(self, mask, edge_index, x):
+    
+        for mp_layer in self.message_passing:
+            x = mp_layer(x, edge_index)
+    
+        return x if mask is None else x[mask, ...]    # self.readout(x, mask=mask)
 
 
 NODE_SAMPLES = 20
@@ -31,7 +42,7 @@ others.output_dim = dataset.output_dim
 others.task_name = dataset.task_name
 
 num_nodes = dataset.x.size(0)
-A = to_adj_mat(dataset.edge_index, num_nodes, undirected=True, assert_connected=False)
+A = to_scipy_sparse_matrix(dataset.edge_index)
 
 # sample nodes from the largest component
 assignments = connected_components(A, return_labels=True)[1]
@@ -57,7 +68,7 @@ for i in tqdm(node_samples):
         torch.save(shortest_distances[subset], fn)
 
     edge_index, _ = subgraph(subset, dataset.edge_index, relabel_nodes=True, num_nodes=dataset.x.size(0))
-    # checked implementation and relabelling is such that subset[i] is relabelled as i
+    # checked the implementation -- relabelling is such that subset[i] is relabelled as i
     x = dataset.x[subset, :]
     new_i = torch.where(subset == i)[0].item()
 

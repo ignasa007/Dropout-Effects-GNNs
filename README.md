@@ -44,7 +44,7 @@ conda activate ${env_name}
 pip install -r requirements_${os}.txt
 ```
 
-PyG>=2.5.0 has an error in the file `torch_geometric.io.fs` at line 193 (see [issue](https://github.com/pyg-team/pytorch_geometric/issues/9330)). Change it to
+`PyG>=2.5.0` has an error in the file `torch_geometric.io.fs` at line 193 (see [issue](https://github.com/pyg-team/pytorch_geometric/issues/9330)). Change it to
 ```python
 fs1.mv(path1, path2, recursive=recursive)
 ```

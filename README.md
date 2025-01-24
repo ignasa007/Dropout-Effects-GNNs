@@ -5,10 +5,8 @@ This is the official code repository for the paper [**Effects of Random Edge-Dro
     singh2024effects,
     title={Effects of Random Edge-Dropping on Over-Squashing in Graph Neural Networks},
     author={Jasraj Singh, Keyue Jiang, Brooks Paige, Laura Toni},
-    booktitle={Submitted to The Thirteenth International Conference on Learning Representations},
-    year={2024},
-    url={https://openreview.net/forum?id=ZZwP9zljas},
-    note={under review}
+    year={2025},
+    url={https://openreview.net/forum?id=ZZwP9zljas}
 }
 ```
 
@@ -44,7 +42,7 @@ conda activate ${env_name}
 pip install -r requirements_${os}.txt
 ```
 
-PyG>=2.5.0 has an error in the file `torch_geometric.io.fs` at line 193 (see [issue](https://github.com/pyg-team/pytorch_geometric/issues/9330)). Change it to
+`PyG>=2.5.0` has an error in the file `torch_geometric.io.fs` at line 193 (see [issue](https://github.com/pyg-team/pytorch_geometric/issues/9330)). Change it to
 ```python
 fs1.mv(path1, path2, recursive=recursive)
 ```

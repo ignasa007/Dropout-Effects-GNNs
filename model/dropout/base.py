@@ -1,9 +1,11 @@
+from typing import Optional
+from argparse import Namespace
 import torch.nn as nn
 
 
 class BaseDropout(nn.Module):
 
-    def __init__(self, dropout_prob=0.5):
+    def __init__(self, dropout_prob: float = 0.5, others: Optional[Namespace] = None):
 
         super(BaseDropout, self).__init__()
 
@@ -22,7 +24,7 @@ class BaseDropout(nn.Module):
             1. Dropout
 
         Args:
-            x (Tensor): feature matrix, eg. shape (|V|, D_{i})
+            x (Tensor): feature matrix, eg. shape (|V|, H_{i})
         '''
 
         return x
@@ -47,7 +49,7 @@ class BaseDropout(nn.Module):
             1. DropMessage
 
         Args:
-            messages (Tensor): message matrix, eg. shape (|E|, D_{i+1})
+            messages (Tensor): message matrix, eg. shape (|E|, H_{i+1})
         '''
 
         return messages

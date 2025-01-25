@@ -1,10 +1,12 @@
+from typing import Optional
+from argparse import Namespace
 import torch
 from model.dropout.base import BaseDropout
 
 
 class DropNode(BaseDropout):
 
-    def __init__(self, dropout_prob=0.5):
+    def __init__(self, dropout_prob: float = 0.5, others: Optional[Namespace] = None):
 
         super(DropNode, self).__init__(dropout_prob)
     

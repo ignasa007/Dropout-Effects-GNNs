@@ -1,10 +1,12 @@
+from typing import Optional
+from argparse import Namespace
 from torch_geometric.utils import dropout_node
 from model.dropout.base import BaseDropout
 
 
 class DropGNN(BaseDropout):
 
-    def __init__(self, dropout_prob=0.5):
+    def __init__(self, dropout_prob: float = 0.5, others: Optional[Namespace] = None):
 
         super(DropGNN, self).__init__(dropout_prob)
     

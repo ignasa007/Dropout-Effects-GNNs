@@ -1,3 +1,5 @@
+from typing import Optional
+from argparse import Namespace
 import torch
 from torch_geometric.utils.num_nodes import maybe_num_nodes
 from model.dropout.base import BaseDropout
@@ -5,7 +7,7 @@ from model.dropout.base import BaseDropout
 
 class DropAgg(BaseDropout):
 
-    def __init__(self, dropout_prob=0.5):
+    def __init__(self, dropout_prob: float = 0.5, others: Optional[Namespace] = None):
 
         super(DropAgg, self).__init__(dropout_prob)
     

@@ -6,7 +6,7 @@ from torch.nn import Module, ModuleList
 from torch_geometric.typing import Adj
 
 from model.message_passing import get_layer
-from model.readout import get_head
+from model.readout import get_readout
 from model.activation import get_activation
 from model.dropout import get_dropout
 
@@ -20,7 +20,7 @@ class Model(Module):
         if others is None:
             others = config
         
-        drop_strategy = get_dropout(config.dropout)(config.drop_p)
+        drop_strategy = get_dropout(config.dropout)(config.drop_p, others=others)
         activation = get_activation(config.gnn_activation)()
         gnn_layer = get_layer(config.gnn)
         gnn_layer_sizes = [others.input_dim] + config.gnn_layer_sizes
@@ -37,7 +37,7 @@ class Model(Module):
                 others=others,
             ))
 
-        ffn_head = get_head(others.task_name)
+        ffn_head = get_readout(others.task_name)
         ffn_layer_sizes = config.gnn_layer_sizes[-1:] + config.ffn_layer_sizes + [others.output_dim]
         self.readout = ffn_head(
             layer_sizes=ffn_layer_sizes,

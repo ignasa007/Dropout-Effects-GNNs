@@ -5,6 +5,25 @@ from torch import Tensor, BoolTensor
 from torch.nn import Module, Linear, Sequential
 
 
+def get_pooler(pooler_name: str):
+
+    from torch_geometric.nn import global_mean_pool, global_add_pool, global_max_pool
+    
+    pooler_map = {
+        'mean': global_mean_pool,
+        'add': global_add_pool,
+        'max': global_max_pool,
+    }
+
+    formatted_name = pooler_name.lower()
+    if formatted_name not in pooler_map:
+        raise ValueError(f'Parameter `pooler_name` not recognised (got `{pooler_name}`).')
+    
+    pooler = pooler_map.get(formatted_name)
+    
+    return pooler
+
+
 class BaseHead(Module):
 
     def __init__(self, layer_sizes: list, activation: Module, others: Optional[Namespace]):
@@ -12,7 +31,6 @@ class BaseHead(Module):
         super(BaseHead, self).__init__()
 
         if others.task_name.lower().startswith('graph'):
-            from model.readout.utils import get_pooler
             self.pooler = get_pooler(others.pooler)
         
         module_list = []

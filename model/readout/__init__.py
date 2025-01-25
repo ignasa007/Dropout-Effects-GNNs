@@ -5,7 +5,7 @@ from model.readout.graph_r import GraphRegression
 from model.readout.graph_c import GraphClassification 
 
 
-def get_head(task_name: str) -> BaseHead:
+def get_readout(task_name: str) -> BaseHead:
 
     head_map = {
         'node-r': NodeRegression,

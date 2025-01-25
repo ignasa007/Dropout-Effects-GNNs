@@ -4,7 +4,7 @@ from argparse import Namespace
 from torch import Tensor
 from torch.nn import Module
 from torch.nn.functional import leaky_relu
-from torch_geometric.utils import softmax
+from torch_geometric.utils import softmax, remove_self_loops
 from torch_geometric.typing import Adj, OptTensor
 from torch_geometric.nn.conv import GATConv
 
@@ -49,7 +49,9 @@ class GATLayer(GATConv):
         return x
 
     def treat_adj_mat(self, edge_index, num_nodes, dtype):
-
+        
+        if self.add_self_loops: # going to add self loops in pretreatment
+            edge_index, _ = remove_self_loops(edge_index)
         edge_index, _ = self.drop_strategy.apply_adj_mat(edge_index, None, self.training)
         edge_index, edge_weight = self.pt.pretreatment(num_nodes, edge_index, dtype)
 

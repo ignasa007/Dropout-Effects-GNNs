@@ -5,6 +5,7 @@ from torch import Tensor
 from torch.nn import Module
 from torch_geometric.typing import Adj, OptTensor
 from torch_geometric.nn.conv import GCNConv
+from torch_geometric.utils import remove_self_loops
 
 from model.dropout.base import BaseDropout
 from model.message_passing.pretreatment import ModelPretreatment
@@ -47,6 +48,8 @@ class GCNLayer(GCNConv):
     
     def treat_adj_mat(self, edge_index, num_nodes, dtype):
         
+        if self.add_self_loops: # going to add self loops in pretreatment
+            edge_index, _ = remove_self_loops(edge_index)
         edge_index, _ = self.drop_strategy.apply_adj_mat(edge_index, None, self.training)
         edge_index, edge_weight = self.pt.pretreatment(num_nodes, edge_index, dtype)
 

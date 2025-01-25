@@ -144,6 +144,11 @@ def parse_arguments(return_others=False):
         '--pooler', type=str, choices=['mean', 'add', 'max'],
         help='Method used to pool node embeddings (when task is at the graph-level).'
     )
+
+    parser.add_argument(
+        '--info_loss_ratio', type=float,
+        help='Ratio of information to preserve per edge (when dropout is DropSens).'
+    )
     
     others, unknown = parser.parse_known_args()
 

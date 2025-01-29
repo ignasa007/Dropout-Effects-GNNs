@@ -37,14 +37,13 @@ def compute_commute_times(edge_index, P=0.):
     # Can alternatively add remaining self loops, since D-A remains unchanged
     edge_index = remove_self_loops(edge_index)[0]
     A = to_adj_mat(edge_index, undirected=True)
-
     degrees = degree(edge_index[1])
     L = torch.diag(degrees) - A
     
     # Can also use torch.linalg.pinv(L+1/A.size(0))) -- I didn't see any diff for simple test cases
     L_pinv = torch.linalg.pinv(L)
     L_pinv_diag = torch.diag(L_pinv)
-    beta = torch.sum(degrees / (1 - P**degrees))
+    beta = torch.sum(degrees / (1-P**degrees))
     C = beta * (L_pinv_diag.unsqueeze(0) + L_pinv_diag.unsqueeze(1) - 2*L_pinv)
 
     return C

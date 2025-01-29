@@ -113,41 +113,38 @@ def parse_arguments(return_others=False):
     
     parser.add_argument(
         '--gt_depth', type=int,
-        help='Depth of the ground-truth function (when dataset is SyntheticMutag).'
-    )
-    parser.add_argument(
-        '--alpha', type=float,
-        help='Commute times percentile (when dataset is SyntheticZINC_CT).'
+        help='Depth of the ground-truth function when dataset is SyntheticMutag.'
     )
     parser.add_argument(
         '--distance', type=float,
-        help='Shortest distance between node pairs (when dataset is SyntheticZINC_SD).'
+        help='Shortest distance between node pairs when dataset is SyntheticZINC_SD.\n \
+            Commute times percentile when dataset is SyntheticZINC_CT.'
     )
 
     parser.add_argument(
         '--attention_heads', type=int,
-        help='Number of attention heads (when GNN is GAT).'
+        help='Number of attention heads when GNN is GAT.'
     )
     parser.add_argument(
         '--eps', type=float,
-        help='Extra weight of self-loops (when GNN is GIN).'
+        help='Extra weight of self-loops when GNN is GIN.'
     )
     parser.add_argument(
         '--power_iter', type=int,
-        help='Number of power iteration steps (when GNN is APPNP).'
+        help='Number of power iteration steps when GNN is APPNP.'
     )
     parser.add_argument(
         '--teleport_p', type=float,
-        help='Teleport probability to use (when GNN is APPNP).'
+        help='Teleport probability to use when GNN is APPNP.'
     )
     parser.add_argument(
         '--pooler', type=str, choices=['mean', 'add', 'max'],
-        help='Method used to pool node embeddings (when task is at the graph-level).'
+        help='Method used to pool node embeddings when task is at the graph-level.'
     )
 
     parser.add_argument(
         '--info_loss_ratio', type=float,
-        help='Ratio of information to preserve per edge (when dropout is DropSens).'
+        help='Ratio of information to preserve per edge when dropout is DropSens.'
     )
     
     others, unknown = parser.parse_known_args()

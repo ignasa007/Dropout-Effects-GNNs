@@ -15,12 +15,12 @@ assert args.sd ^ args.ct    # only one of sd or ct is turned on
 
 if args.sd:
     distances = (4, 5, 6, 7, 8)
-    exp_dir = 'results/{dropout}/SyntheticZINC_SD/{gnn}/L={distance}/P={drop_p}'
+    exp_dir = 'results/{dropout}/SyntheticZINC_SD/{gnn}/distance={distance}/P={drop_p}'
     save_fn = 'assets/synthetics/zinc_sd.png'
 elif args.ct:
     distances = [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, \
         0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0]
-    exp_dir = 'results/{dropout}/SyntheticZINC_CT/{gnn}/alpha={distance}/P={drop_p}'
+    exp_dir = 'results/{dropout}/SyntheticZINC_CT/{gnn}/distance={distance}/P={drop_p}'
     save_fn = 'assets/synthetics/zinc_ct.png'
 
 gnns = (

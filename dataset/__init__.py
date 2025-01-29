@@ -3,8 +3,7 @@ from dataset.planetoid import Cora, CiteSeer, PubMed
 from dataset.qm9 import QM9
 from dataset.tudataset import Proteins, PTC, Mutag, Enzymes, Reddit, IMDb, Collab
 from dataset.lrgb import Pascal
-from dataset.synthetic_zinc_ct import SyntheticZINC_CT
-from dataset.synthetic_zinc_sd import SyntheticZINC_SD
+from dataset.synthetic_zinc import SyntheticZINC_SD, SyntheticZINC_CT
 from dataset.synthetic_mutag import SyntheticMutag
 from dataset.twitch import TwitchDE
 from dataset.actor import Actor

@@ -70,11 +70,12 @@ fig, axs = plt.subplots(len(drop_ps), len(gnns), figsize=(6.4*len(gnns), 4.8*len
 if not hasattr(axs, '__len__'): axs = np.array((axs,))
 for i, ax in enumerate(axs.flatten()):
     drop_p, gnn = drop_ps[i//len(gnns)], gnns[i%len(gnns)]
-    # drop_p = drop_ps[i%len(drop_ps)]
-    # for gnn in gnns:
-        # plot(ax, gnn, 'NoDrop', 0.0)
+    plot(ax, gnn, 'NoDrop', 0.0)
     for dropout in dropouts:
         plot(ax, gnn, dropout, drop_p)
+    # drop_p = drop_ps[i%len(drop_ps)]
+    # for gnn in gnns:
+    #     plot(ax, gnn, 'NoDrop', 0.0)
     # ax.set_yscale('log')
     ax.grid()
     ax.legend()

@@ -33,7 +33,7 @@ class Regression(Metrics):
 
         return mse
     
-    def compute_metrics(self):
+    def aggregate_metrics(self):
 
         mean_sq_error = self.mean_squared_error.compute().item()
         mean_abs_error = self.mean_absolute_error.compute().item()

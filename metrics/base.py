@@ -15,6 +15,6 @@ class Metrics:
 
         raise NotImplementedError
     
-    def compute_metrics(self):
+    def aggregate_metrics(self):
 
         raise NotImplementedError

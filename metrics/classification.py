@@ -59,7 +59,7 @@ class Classification(Metrics):
 
         return batch_ce_loss / target.size(0)
 
-    def compute_metrics(self):
+    def aggregate_metrics(self):
 
         cross_entropy = self.total_ce_loss / self.n_samples
         accuracy = self.accuracy_fn.compute().item()

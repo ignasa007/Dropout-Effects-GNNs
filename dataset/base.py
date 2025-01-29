@@ -36,9 +36,9 @@ class BaseDataset:
 
         return self.metrics.compute_loss(out, target)
 
-    def compute_metrics(self):
+    def aggregate_metrics(self):
 
-        return self.metrics.compute_metrics()
+        return self.metrics.aggregate_metrics()
         
     def train(self, model, optimizer):
 
@@ -62,7 +62,7 @@ class Transductive(BaseDataset):
         train_loss.backward()
         optimizer.step()
 
-        train_metrics = self.compute_metrics()
+        train_metrics = self.aggregate_metrics()
         return train_metrics
     
     @torch.no_grad()
@@ -72,9 +72,9 @@ class Transductive(BaseDataset):
         out = model(self.x, self.edge_index, mask=None)
 
         self.compute_loss(out[self.val_mask], self.y[self.val_mask])
-        val_metrics = self.compute_metrics()
+        val_metrics = self.aggregate_metrics()
         self.compute_loss(out[self.test_mask], self.y[self.test_mask])
-        test_metrics = self.compute_metrics()
+        test_metrics = self.aggregate_metrics()
 
         return val_metrics, test_metrics
 
@@ -92,7 +92,7 @@ class Inductive(BaseDataset):
             train_loss.backward()
             optimizer.step()
 
-        train_metrics = self.compute_metrics()
+        train_metrics = self.aggregate_metrics()
         return train_metrics
     
     @torch.no_grad()
@@ -103,11 +103,11 @@ class Inductive(BaseDataset):
         for batch in self.val_loader:
             out = model(batch.x, batch.edge_index, batch.batch)
             self.compute_loss(out, batch.y)
-        val_metrics = self.compute_metrics()
+        val_metrics = self.aggregate_metrics()
 
         for batch in self.test_loader:
             out = model(batch.x, batch.edge_index, batch.batch)
             self.compute_loss(out, batch.y)
-        test_metrics = self.compute_metrics()
+        test_metrics = self.aggregate_metrics()
 
         return val_metrics, test_metrics

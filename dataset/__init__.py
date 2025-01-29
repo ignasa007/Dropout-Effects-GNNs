@@ -1,7 +1,7 @@
 from dataset.base import BaseDataset
 from dataset.planetoid import Cora, CiteSeer, PubMed
 from dataset.qm9 import QM9
-from dataset.tudataset import Proteins, PTC, Mutag, Reddit, IMDb, Collab
+from dataset.tudataset import Proteins, PTC, Mutag, Enzymes, Reddit, IMDb, Collab
 from dataset.lrgb import Pascal
 from dataset.synthetic_zinc_ct import SyntheticZINC_CT
 from dataset.synthetic_zinc_sd import SyntheticZINC_SD
@@ -19,7 +19,7 @@ def get_dataset(dataset_name: str, **kwargs) -> BaseDataset:
         # citation networks
         'cora': Cora, 'citeseer': CiteSeer, 'pubmed': PubMed,
         # biomed networks
-        'qm9': QM9, 'proteins': Proteins, 'ptc': PTC, 'mutag': Mutag,
+        'qm9': QM9, 'proteins': Proteins, 'ptc': PTC, 'mutag': Mutag, 'enzymes': Enzymes,
         # social networks
         'reddit': Reddit, 'imdb': IMDb, 'collab': Collab,
         # synthetic networks

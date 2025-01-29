@@ -54,6 +54,10 @@ class Mutag(TUDataset):
     def __init__(self, **kwargs):
         super(Mutag, self).__init__(name='MUTAG', **kwargs)
 
+class Enzymes(TUDataset):
+    def __init__(self, **kwargs):
+        super(Enzymes, self).__init__(name='ENZYMES', **kwargs)
+
 class Reddit(TUDataset):
     def __init__(self, **kwargs):
         super(Reddit, self).__init__(name='REDDIT-BINARY', **kwargs)

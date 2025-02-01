@@ -43,13 +43,13 @@ class SyntheticZINC(Inductive):
 
     def make_dataset(self, node_pairs_fn, split, size, device):
 
-        # Get sampled node pairs separated by `distance` hops
-        node_pairs = self.get_node_pairs(node_pairs_fn, split)
         dataset = ZINCTorch(root=root, subset=True, split=split)
         dataset = enumerate(dataset)
-        if size is not None:
-            random.shuffle(dataset)
-            dataset = dataset[:size]
+        random.shuffle(dataset)
+        dataset = dataset[:size]
+        
+        # Get sampled node pairs separated by `distance` hops
+        node_pairs = self.get_node_pairs(node_pairs_fn, split)
         # Create node-level features, and graph-level labels
         data_list = [self.make_features_and_labels(datum, node_pairs[index]) for index, datum in dataset]
         # Filter out molecules with no two nodes separated by `distance`

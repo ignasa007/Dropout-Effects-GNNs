@@ -7,7 +7,6 @@ device_index=${3}
 
 dropouts=("NoDrop" "DropEdge" "Dropout" "DropMessage")
 drop_ps=$(seq 0.1 0.1 0.9)
-samples=$(seq 1 1 10)
 
 hidden_size=64
 depth=4
@@ -21,7 +20,7 @@ n_epochs=300
 
 for dropout in "${dropouts[@]}"; do
     for drop_p in $( [[ "$dropout" == "NoDrop" ]] && echo "0.0" || echo "${drop_ps[@]}" ); do
-        num_samples="$(ls results/${dropout}/${dataset}/${gnn}/L=${depth}/P=${drop_p} | wc -l)"
+        num_samples=$(find results/${dropout}/${dataset}/${gnn}/L=${depth}/P=${drop_p} -maxdepth 1 -type f 2>/dev/null | wc -l)
         # for sample in "$((${total_samples}-$))"; do
         while [ ${num_samples} -lt ${total_samples} ]; do
             python -B main.py \
@@ -37,7 +36,7 @@ for dropout in "${dropouts[@]}"; do
                 --weight_decay ${weight_decay} \
                 --n_epochs ${n_epochs} \
                 --device_index ${device_index};
-            num_samples=$((${num_samples}+1))
+            num_samples=$((${num_samples}+1));
         done
     done
 done

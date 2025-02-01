@@ -16,14 +16,14 @@ parser.add_argument('--dropouts', type=str, nargs='+', choices=['Dropout', 'Drop
 args = parser.parse_args()
 
 '''
-for name in ('PROTEINS', 'PTC_MR', 'MUTAG', 'ENZYMES', 'REDDIT-BINARY', 'IMDB-BINARY', 'COLLAB'): 
-    dataset = TUDataset(root='./data/TUDataset', name=name)
+for name in ('PROTEINS', 'MUTAG', 'ENZYMES', 'REDDIT-BINARY', 'IMDB-BINARY', 'COLLAB'): 
+    dataset = TUDataset(root='./data/TUDataset', name=name, use_node_attr=True)
     print(dataset.y.unique(return_counts=True)[1].max().item() / dataset.y.size(0))
 '''
 cutoffs = {
     'Proteins': 0.5957,
-    'Mutag': 0.5581,
-    'Enzymes': 0.6649,
+    'Mutag': 0.6649,
+    'Enzymes': 0.1667,
     'Reddit': 0.5000,
     'IMDb': 0.5000,
     'Collab': 0.5200,
@@ -44,10 +44,10 @@ def get_samples(dataset, gnn, dropout, drop_p):
             print(f'Incomplete training run: {exp_dir_format}/{timestamp}')
             shutil.rmtree(f'{exp_dir_format}/{timestamp}')
             continue
-        if np.max(train[metric]) < cutoffs[dataset]:
-            print(f'Failed to learn: {exp_dir_format}/{timestamp}')
-            shutil.rmtree(f'{exp_dir_format}/{timestamp}')
-            continue
+        # if np.max(train[metric]) < cutoffs[dataset]:
+        #     print(f'Failed to learn: {exp_dir_format}/{timestamp}')
+        #     shutil.rmtree(f'{exp_dir_format}/{timestamp}')
+        #     continue
         sample = test[metric][np.argmax(val[metric])]
         # sample = np.max(train[metric])
         samples.append(sample)
@@ -70,11 +70,11 @@ def plot(ax, dataset, gnn, dropout):
 
 
 fig, axs = plt.subplots(len(args.datasets), len(args.gnns), figsize=(6.4*len(args.gnns), 4.8*len(args.datasets)))
-if not hasattr(axs, '__len__'): axs = (axs,)
+axs = axs.flatten() if isinstance(axs, np.ndarray) else (axs,)
 
 for i, dataset in enumerate(args.datasets):
     for j, gnn in enumerate(args.gnns):
-        ax = axs[i, j]
+        ax = axs[i*len(args.datasets)+j]
         nodrop_ylevel = np.mean(get_samples(dataset, gnn, 'NoDrop', 0.0))
         ax.hlines(nodrop_ylevel, drop_ps[0], drop_ps[-1], colors='red', linestyles='--')
         for dropout in args.dropouts:

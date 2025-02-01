@@ -18,8 +18,11 @@ class CustomDataset(InMemoryDataset):
         return self.get(index)
 
 
-def split_dataset(dataset, train_split=Splits.train_split, val_split=Splits.val_split, test_split=Splits.test_split):
+def split_dataset(dataset, train_split=Splits.train_split, val_split=Splits.val_split, test_split=None):
 
+    if test_split is not None:
+        assert train_split + val_split + test_split == 1.
+        
     train_end = int(train_split*len(dataset))
     val_end = train_end + int(val_split*len(dataset))
 

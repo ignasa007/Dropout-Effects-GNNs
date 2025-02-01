@@ -7,6 +7,12 @@ from typing import Union, List, Tuple
 def get_time():
     return datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
+def sci_notation(x, decimals=6, strip=True):
+    mantissa, exponent = f'{x:.{decimals}e}'.split('e')
+    if strip:
+        mantissa = mantissa.rstrip('0').rstrip('.')
+    return mantissa + f'e{exponent}'
+
 
 class Logger:
 
@@ -70,5 +76,5 @@ class Logger:
     ):
 
         formatted_metrics = prefix
-        formatted_metrics += ', '.join(f'{metric} = {value:.6e}' for metric, value in metrics)
+        formatted_metrics += ', '.join(f'{metric} = {sci_notation(value, decimals=6, strip=False)}' for metric, value in metrics)
         self.log(formatted_metrics, with_time, print_text)

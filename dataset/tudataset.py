@@ -1,19 +1,20 @@
 import torch
 from torch_geometric.datasets import TUDataset as TUDatasetTorch
-from torch_geometric.transforms import ToDevice
 
 from dataset.constants import root, batch_size
 from dataset.base import Inductive
 from dataset.utils import split_dataset, create_loaders
 
 
-def PreTransform(datum):
+def pre_transform(datum):
 
     # Following FoSR (Karhadkar et al., 2022) and GTR (Black et al., 2023)
     # https://github.com/kedar2/FoSR/blob/1a7360c2c77c42624bdc7ffef1490a2eb0a8afd0/run_graph_classification.py#L27
     
-    datum.x = torch.ones((datum.num_nodes, 1))
-    
+    if datum.x is None:
+        # Cannot learn datasets like Proteins and Enzymes without features (F1 score = 0)
+        datum.x = torch.ones((datum.num_nodes, 1))
+
     return datum
 
 
@@ -25,14 +26,15 @@ class TUDataset(Inductive):
             root=f'{root}/TUDataset',
             name=name,
             use_node_attr=True,
-            pre_transform=PreTransform,
+            pre_transform=pre_transform,
         ).to(device)
         dataset = dataset.shuffle()
         
+        # (80, 10, 10) splits and batch_size=64 following Karhadkar et al. (2022)
         self.train_loader, self.val_loader, self.test_loader = create_loaders(
             ### normalize features(*split_dataset(...))?
-            split_dataset(dataset),
-            batch_size=batch_size,  # Following Karhadkar et al. (2022), batch_size = 64
+            split_dataset(dataset, train_split=0.8, val_split=0.1, test_split=0.1),
+            batch_size=batch_size,
             shuffle=True
         )
 

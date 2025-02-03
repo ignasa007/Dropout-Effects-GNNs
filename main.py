@@ -24,7 +24,7 @@ model = Model(config, others).to(device=DEVICE)
 lr = config.learning_rate
 optimizer = Adam(model.parameters(), lr=lr, weight_decay=config.weight_decay)
 scheduling_metric = 'Cross Entropy Loss' if others.task_name.lower().endswith('-c') else 'Mean Absolute Error'
-scheduler = ReduceLROnPlateau(optimizer, factor=0.5, patience=10//config.test_every, threshold=1e-1, mode='min')
+scheduler = ReduceLROnPlateau(optimizer, factor=0.5, patience=10//config.test_every, threshold=1e-2, mode='min')
 
 logger = Logger(config, others)
 format_epoch = FormatEpoch(config.n_epochs)

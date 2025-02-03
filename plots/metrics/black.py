@@ -74,7 +74,7 @@ axs = axs.flatten() if isinstance(axs, np.ndarray) else (axs,)
 
 for i, dataset in enumerate(args.datasets):
     for j, gnn in enumerate(args.gnns):
-        ax = axs[i*len(args.datasets)+j]
+        ax = axs[i*len(args.gnns)+j]
         nodrop_ylevel = np.mean(get_samples(dataset, gnn, 'NoDrop', 0.0))
         ax.hlines(nodrop_ylevel, drop_ps[0], drop_ps[-1], colors='red', linestyles='--')
         for dropout in args.dropouts:

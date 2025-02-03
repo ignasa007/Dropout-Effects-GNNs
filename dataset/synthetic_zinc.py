@@ -44,7 +44,7 @@ class SyntheticZINC(Inductive):
     def make_dataset(self, node_pairs_fn, split, size, device):
 
         dataset = ZINCTorch(root=root, subset=True, split=split)
-        dataset = enumerate(dataset)
+        dataset = list(enumerate(dataset))
         random.shuffle(dataset)
         dataset = dataset[:size]
         

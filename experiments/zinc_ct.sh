@@ -21,7 +21,7 @@ n_epochs=250        # 500
 for dropout in "${dropouts[@]}"; do
     for drop_p in $( [[ "$dropout" == "NoDrop" ]] && echo "0.0" || echo "${drop_ps[@]}" ); do
         for alpha in ${alphas}; do
-            num_samples=$(find results/${dropout}/${dataset}/${gnn}/distance=${alpha}/P=${drop_p} -mindepth 1 -type d 2>/dev/null | wc -l)
+            num_samples=$(find results/${dropout}/${dataset}/${gnn}/L=${alpha}/P=${drop_p} -mindepth 1 -type d 2>/dev/null | wc -l)
             while [ ${num_samples} -lt ${total_samples} ]; do
                 python -B main.py \
                     --dataset ${dataset} \

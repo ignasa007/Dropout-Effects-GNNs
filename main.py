@@ -23,7 +23,6 @@ model = Model(config, others).to(device=DEVICE)
 
 lr = config.learning_rate
 optimizer = Adam(model.parameters(), lr=lr, weight_decay=config.weight_decay)
-# scheduling_metric = 'Accuracy' if others.task_name.lower().endswith('-c') else 'Mean Absolute Error'
 scheduling_metric = 'Cross Entropy Loss' if others.task_name.lower().endswith('-c') else 'Mean Absolute Error'
 scheduler = ReduceLROnPlateau(optimizer, factor=0.5, patience=10//config.test_every, threshold=1e-1, mode='min')
 
@@ -43,7 +42,6 @@ for epoch in tqdm(range(1, config.n_epochs+1)):
         logger.log_metrics(test_metrics, prefix='\tTesting:'.ljust(13), with_time=False)
         
         scheduler.step([value for metric, value in val_metrics if metric == scheduling_metric][0])
-        # scheduler.step([value for metric, value in train_metrics if metric == scheduling_metric][0])
         if lr != optimizer.param_groups[0]['lr']:
             logger.log(f"\tUpdated learning rate from {sci_notation(lr, decimals=6, strip=True)} to {sci_notation(optimizer.param_groups[0]['lr'], decimals=6, strip=True)}.", with_time=False)
             lr = optimizer.param_groups[0]['lr']

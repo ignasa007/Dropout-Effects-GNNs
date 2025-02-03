@@ -3,19 +3,23 @@ from collections import defaultdict
 
 def parse_configs(fn):
 
-    configs = dict()
+    config, others = dict(), dict()
 
     with open(fn, 'r') as f:
-        for line in f.readlines():
-            line = line.strip()
-            if not line:
-                continue
-            elif 'Epoch' in line:
-                break
-            key, value = line.split(' = ')
-            configs[key] = value
 
-    return configs
+        line = f.readline().strip()
+        while line:
+            key, value = line.split(' = ')
+            config[key] = value
+            line = f.readline().strip()
+        
+        line = f.readline().strip()
+        while line:
+            key, value = line.split(' = ')
+            others[key] = value
+            line = f.readline().strip()
+
+    return config, others
 
 
 def parse_metrics(fn):

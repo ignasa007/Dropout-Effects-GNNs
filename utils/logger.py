@@ -27,7 +27,8 @@ class Logger:
             model (str): model name.
         '''
         
-        self.exp_dir = f'./results/{config.dropout}/{config.dataset}/{config.gnn}/L={len(config.gnn_layer_sizes)}/P={round(config.drop_p, 6)}/{get_time()}'
+        # self.exp_dir = f'./results/{config.dropout}/{config.dataset}/{config.gnn}/L={len(config.gnn_layer_sizes)}/P={round(config.drop_p, 6)}/{get_time()}'
+        self.exp_dir = config.exp_dir
         os.makedirs(self.exp_dir)
         
         self.log(''.join(f'{k} = {v}\n' for k, v in vars(config).items()), with_time=False)
@@ -38,10 +39,6 @@ class Logger:
             self.log(''.join(f'{k} = {v}\n' for k, v in vars(others).items()), with_time=False)
         # with open(f'{self.exp_dir}/others.pkl', 'wb') as f:
         #     pickle.dump(others, f, protocol=pickle.HIGHEST_PROTOCOL)
-
-        self.pickle_dir = None
-        self.array_dir = None
-        self.tensor_dir = None
 
     def log(
         self,

@@ -86,6 +86,10 @@ def parse_arguments(return_others=False):
         '--weight_decay', type=float, default=0,
         help='Weight decay for Adam optimizer.'
     )
+    parser.add_argument(
+        '--schedule_lr', type=bool, default=True,
+        help='Whether to reduce the learning rate if the validation metrics plateau.'
+    )
 
     parser.add_argument(
         '--device_index', type=int, default=None,

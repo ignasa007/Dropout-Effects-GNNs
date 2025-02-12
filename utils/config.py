@@ -65,7 +65,7 @@ def parse_arguments(return_others=False):
     )
 
     parser.add_argument(
-        '--dropout', type=str, required=True,
+        '--dropout', type=str, default='NoDrop',
         # action=lambda dropout: format_dropout_name.get(dropout.lower()),
         help='The dropping method.'
     )
@@ -100,6 +100,11 @@ def parse_arguments(return_others=False):
         '--save_every', type=int, default=None,
         help='Number of epochs of training to save the model after.\n' \
             '\tSpecial cases: skip to never save and -1 to save at the last epoch.'
+    )
+
+    parser.add_argument(
+        '--exp_dir', type=str, required=True,
+        help='Directory to log the experiment in.'
     )
 
     config, _ = parser.parse_known_args()
@@ -145,6 +150,11 @@ def parse_arguments(return_others=False):
     parser.add_argument(
         '--info_loss_ratio', type=float,
         help='Ratio of information to preserve per edge when dropout is DropSens.'
+    )
+
+    parser.add_argument(
+        '--model_sample', type=int,
+        help='Model sample to load weights from when dataset is SyntheticZINC.'
     )
     
     others, unknown = parser.parse_known_args()

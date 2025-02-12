@@ -15,17 +15,16 @@ assert args.sd ^ args.ct    # only one of sd or ct is turned on
 
 if args.sd:
     distances = (4, 5, 6, 7, 8)
-    exp_dir = 'results/{dropout}/SyntheticZINC_SD/{gnn}/distance=11/P={drop_p}'
-    save_fn = 'assets/synthetics/zinc_sd.png'
+    exp_dir = './results/{dropout}/SyntheticZINC_SD/{gnn}/P={drop_p}/distance={distance}'
+    save_fn = './assets/synthetics/zinc_sd.png'
 elif args.ct:
-    distances = [0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, \
-        0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0][::2]
-    exp_dir = 'results/{dropout}/SyntheticZINC_CT/{gnn}/L=11/P={drop_p}'
-    save_fn = 'assets/synthetics/zinc_ct.png'
+    distances = np.round(np.linspace(0.0, 1.0, 11), 1)
+    exp_dir = './results/{dropout}/SyntheticZINC_CT/{gnn}/P={drop_p}/alpha={distance}'
+    save_fn = './assets/synthetics/zinc_ct.png'
 
 gnns = (
     'GCN',
-    'GAT',
+    # 'GAT',
     # 'GIN',
 )
 dropouts = (
@@ -37,34 +36,27 @@ dropouts = (
     # 'DropGNN'
 )
 drop_ps = (
-    0.1,
+    # 0.1,
     0.2,
     0.5
 )
+metric = 'Mean Absolute Error'
 
 def plot(ax, gnn, dropout, drop_p):
     
-    exp_dir_format = exp_dir.format(dropout=dropout, gnn=gnn, drop_p=drop_p)
-    samples = [list() for _ in distances]
-    
-    for timestamp in os.listdir(exp_dir_format):
-    
-        log_fn = f'{exp_dir_format}/{timestamp}/logs'
-    
-        _, others = parse_configs(log_fn)
-        distance = float(others['distance'])
-        if not distance in distances: continue
-        _, val, test = parse_metrics(log_fn)
-        if len(test.get('Mean Absolute Error', [])) < 250: continue
-        
-        sample = test['Mean Absolute Error'][np.argmin(val['Mean Absolute Error'])]
-        # sample = np.min(train['Mean Absolute Error'])
-        samples[distances.index(distance)].append(sample)
-        
-    # means = np.array(map(lambda x: np.min(x), samples))
-    means = np.array(list(map(lambda x: np.mean(x), samples)))
-    stds = np.array(list(map(lambda x: np.std(x), samples)))
-    
+    means, stds = list(), list()
+    for distance in distances:
+        exp_dir_format = exp_dir.format(dropout=dropout, gnn=gnn, distance=distance, drop_p=drop_p)
+        samples = list()
+        for timestamp in os.listdir(exp_dir_format):
+            train, val, test = parse_metrics(f'{exp_dir_format}/{timestamp}/logs')
+            if len(test.get(metric, [])) < 500:
+                continue
+            sample = test[metric][np.argmin(val[metric])]
+            # sample = np.min(train[metric])
+            samples.append(sample)
+        means.append(np.mean(samples))
+        stds.append(np.std(samples))
     means, stds = np.array(means), np.array(stds)
     # ax.plot(distances, means, label=gnn)
     ax.plot(distances, means, label=dropout)

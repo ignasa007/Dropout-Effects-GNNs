@@ -38,8 +38,8 @@ class SyntheticZINC(Inductive):
         super(SyntheticZINC, self).__init__(self.task_name, device)
 
     def check_args(self, others: Namespace):
-
-        assert others.pooler == 'max', f'For SyntheticZINC, the `pooler` argument must be `max`.'
+        pass
+        # assert others.pooler == 'max', f'For SyntheticZINC, the `pooler` argument must be `max`.'
 
     def make_dataset(self, node_pairs_fn, split, size, device):
 

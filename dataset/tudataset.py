@@ -7,12 +7,11 @@ from dataset.utils import split_dataset, create_loaders
 
 
 def pre_transform(datum):
-
-    # Following FoSR (Karhadkar et al., 2022) and GTR (Black et al., 2023)
-    # https://github.com/kedar2/FoSR/blob/1a7360c2c77c42624bdc7ffef1490a2eb0a8afd0/run_graph_classification.py#L27
     
+    # Cannot learn datasets Mutag, Enzymes and Proteins without features (F1 score = 0)
     if datum.x is None:
-        # Cannot learn datasets like Proteins and Enzymes without features (F1 score = 0)
+        # Following FoSR (Karhadkar et al., 2022) and GTR (Black et al., 2023)
+        # https://github.com/kedar2/FoSR/blob/1a7360c2c77c42624bdc7ffef1490a2eb0a8afd0/run_graph_classification.py#L27
         datum.x = torch.ones((datum.num_nodes, 1))
 
     return datum

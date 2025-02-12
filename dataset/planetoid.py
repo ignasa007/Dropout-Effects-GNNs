@@ -1,12 +1,8 @@
-from typing import Tuple, Dict
-
 import torch
 from torch_geometric.datasets import Planetoid as PlanetoidTorch
-from torch.optim import Optimizer
 
 from dataset.constants import root
 from dataset.base import Transductive
-from model import Model
 
 
 class Planetoid(Transductive):

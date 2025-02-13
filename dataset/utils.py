@@ -67,11 +67,11 @@ def normalize_labels(train, *others):
     return out
 
 
-def create_loaders(splits, batch_size=batch_size, shuffle=True):
+def create_loaders(splits, **kwargs):
 
     out = ()
     
     for split in splits:
-        out += (DataLoader(split, batch_size=batch_size, shuffle=shuffle),)
+        out += (DataLoader(split, **kwargs),)
     
     return out

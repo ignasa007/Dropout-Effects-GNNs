@@ -32,7 +32,12 @@ lr = config.learning_rate
 optimizer = Adam(model.parameters(), lr=lr, weight_decay=config.weight_decay)
 if config.schedule_lr:
     scheduling_metric = 'Cross Entropy Loss' if dataset.task_name.lower().endswith('-c') else 'Mean Absolute Error'
-    scheduler = ReduceLROnPlateau(optimizer, factor=0.5, patience=10//config.test_every, threshold=1e-2, mode='min')
+    scheduler = ReduceLROnPlateau(
+        optimizer, patience=10//config.test_every, min_lr=1e-8,
+        # Default arguments, replicating FoSR (Karhadkar et al., 2022)
+        # https://github.com/kedar2/FoSR/blob/1a7360c2c77c42624bdc7ffef1490a2eb0a8afd0/experiments/graph_classification.py#L78
+        mode='min', factor=0.1, threshold=1e-4
+    )
 
 logger = Logger(config, others)
 format_epoch = FormatEpoch(config.n_epochs)

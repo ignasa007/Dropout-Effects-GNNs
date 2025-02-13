@@ -14,8 +14,9 @@ class Actor(Transductive):
         dataset = ActorTorch(root=f'{root}/Actor').to(device)
 
         self.x = dataset.x
-        ### important to make the graph undirected
+        ### Important to make the graph undirected
         ### TODO: GCN still not learning
+        ### TODO: Should not have to make undirected
         self.edge_index = to_undirected(remove_self_loops(dataset.edge_index)[0])
         self.y = dataset.y
         

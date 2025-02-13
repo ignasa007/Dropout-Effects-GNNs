@@ -14,7 +14,8 @@ class Wikipedia(Transductive):
         dataset = WikipediaTorch(root=f'{root}/Wikipedia', name=name).to(device)
 
         self.x = dataset[0].x
-        ### important to make the graph undirected, GCN does not learn without it
+        ### Important to make the graph undirected, GCN does not learn without it
+        ### TODO: Should not have to make undirected
         self.edge_index = to_undirected(remove_self_loops(dataset[0].edge_index)[0])
         self.y = dataset[0].y
 

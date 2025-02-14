@@ -22,7 +22,7 @@ others.task_name = format_task_name.get(dataset.task_name.lower())
 
 model = Model(config, others)
 if config.dataset.lower().startswith('SyntheticZINC'.lower()) and others.model_sample is not None:
-    load_fn = f'./results/synthetic-zinc_state-dicts/{config.gnn}/sample-{others.model_sample}.pt'
+    load_fn = f'./results/synthetic-zinc_state-dicts/{config.gnn}/sample={others.model_sample}.pt'
     state_dict = torch.load(load_fn, map_location=torch.device('cpu'), weights_only=True)
     model.load_state_dict(state_dict)
     print(f'Successfully loaded state-dict {load_fn}.')
@@ -36,7 +36,6 @@ if config.schedule_lr:
         optimizer, patience=10//config.test_every, min_lr=1e-8,
         # Default arguments, replicating FoSR (Karhadkar et al., 2022)
         # https://github.com/kedar2/FoSR/blob/1a7360c2c77c42624bdc7ffef1490a2eb0a8afd0/experiments/graph_classification.py#L78
-        mode='min', factor=0.1, threshold=1e-4
     )
 
 logger = Logger(config, others)

@@ -20,4 +20,4 @@ plt.plot(test[args.metric], label='test')
 
 plt.legend()
 plt.grid()
-plt.savefig(f'assets/{args.path.replace('/', '-')}.png')
+plt.savefig(f"assets/{args.path.replace('/', '-')}.png")

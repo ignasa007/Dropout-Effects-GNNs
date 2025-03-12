@@ -1,4 +1,6 @@
-from typing import Union
+if __name__ == '__main__':
+    import warnings; warnings.filterwarnings('ignore')
+
 from argparse import Namespace
 import os
 import random
@@ -10,17 +12,19 @@ from torch_geometric.datasets import ZINC as ZINCTorch
 
 from dataset.constants import root, batch_size
 from dataset.base import Inductive
-from dataset.utils import CustomDataset, create_loaders
+from dataset.utils import create_loaders
 
 
 root = f'{root}/ZINC'
+batch_size = 250    # Divisible by 1k
 
 
 class SyntheticZINC(Inductive):
 
-    def __init__(self, node_pairs_fn: str, distance: Union[float, int], device: torch.device, **kwargs):
+    def __init__(self, node_pairs_fn: str, device: torch.device, others: Namespace, **kwargs):
 
-        self.distance = distance
+        self.distance = self.process_args(others)
+        
         splits, sizes = ('train', 'val', 'test'), (None, None, None)
         datasets = (
             self.make_dataset(node_pairs_fn, split, size, device)
@@ -29,7 +33,7 @@ class SyntheticZINC(Inductive):
         self.train_loader, self.val_loader, self.test_loader = create_loaders(
             datasets,
             batch_size=batch_size,
-            shuffle=True
+            shuffle=True,
         )
 
         self.task_name = 'graph-r'
@@ -37,16 +41,17 @@ class SyntheticZINC(Inductive):
         self.num_classes = 1
         super(SyntheticZINC, self).__init__(self.task_name, device)
 
-    def check_args(self, others: Namespace):
-        pass
-        # assert others.pooler == 'max', f'For SyntheticZINC, the `pooler` argument must be `max`.'
+    def process_args(self, others: Namespace):
+        
+        assert others.pooler == 'max', f'For SyntheticZINC, the `pooler` argument must be `max`.'
 
     def make_dataset(self, node_pairs_fn, split, size, device):
 
         dataset = ZINCTorch(root=root, subset=True, split=split)
         dataset = list(enumerate(dataset))
-        random.shuffle(dataset)
-        dataset = dataset[:size]
+        if size is not None:
+            random.shuffle(dataset)
+            dataset = dataset[:size]
         
         # Get sampled node pairs separated by `distance` hops
         node_pairs = self.get_node_pairs(node_pairs_fn, split)
@@ -54,8 +59,10 @@ class SyntheticZINC(Inductive):
         data_list = [self.make_features_and_labels(datum, node_pairs[index]) for index, datum in dataset]
         # Filter out molecules with no two nodes separated by `distance`
         data_list = [datum.to(device) for datum in data_list if datum is not None]
-
-        return CustomDataset(data_list)
+        # TODO: Create custom dataset (just to be able to use GPUs efficiently)
+        # dataset = CustomDataset(data_list)
+        
+        return data_list
 
     def get_node_pairs(self, node_pairs_fn: str, split: str):
 
@@ -85,7 +92,7 @@ class SyntheticZINC(Inductive):
         return node_pairs
 
     def make_features_and_labels(self, datum, node_pair):
-
+                
         datum.x = torch.zeros_like(datum.x, dtype=torch.float)  # Set all node features to 0
         if node_pair is not None:
             features = torch.rand(len(node_pair))               # Sample random features
@@ -104,11 +111,15 @@ class SyntheticZINC_SD(SyntheticZINC):
 
     def __init__(self, device: torch.device, others: Namespace, **kwargs):
 
-        self.check_args(others)
-        distance = int(others.distance)
+        super(SyntheticZINC_SD, self).__init__(self.__class__.__name__, device, others)
+
+    def process_args(self, others: Namespace):
+
+        super(SyntheticZINC_SD, self).process_args(others)
+        distance = float(others.distance)
         assert distance >= 0
 
-        super(SyntheticZINC_SD, self).__init__(self.__class__.__name__, distance, device)
+        return distance
 
     def get_node_pair_choices(self, edge_index):
 
@@ -125,12 +136,16 @@ class SyntheticZINC_CT(SyntheticZINC):
 
     def __init__(self, device: torch.device, others: Namespace, **kwargs):
 
-        self.check_args(others)
+        super(SyntheticZINC_CT, self).__init__(self.__class__.__name__, device, others)
+
+    def process_args(self, others: Namespace):
+
+        super(SyntheticZINC_CT, self).process_args(others)
         distance = float(others.distance)
         assert 0 <= distance <= 1
-        
-        super(SyntheticZINC_CT, self).__init__(self.__class__.__name__, distance, device)
 
+        return distance
+    
     def get_node_pair_choices(self, edge_index):
 
         global compute_commute_times
@@ -141,3 +156,21 @@ class SyntheticZINC_CT(SyntheticZINC):
         choices = torch.where(commute_times == quantile)    # Tuple[row indices, column indices]
 
         return choices
+
+
+if __name__ == '__main__':
+
+    import argparse
+    import os
+    import numpy as np
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--step', type=float, required=True)
+    args = parser.parse_args()
+
+    device = torch.device('cpu')
+    distances = list(map(lambda x: round(x, str(args.step)[::-1].find('.')), np.arange(0.0, 1+args.step, args.step)))
+
+    for distance in distances:
+        others = Namespace(distance=distance, pooler='max')
+        SyntheticZINC_CT(device, others)

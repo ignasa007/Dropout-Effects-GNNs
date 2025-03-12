@@ -66,7 +66,7 @@ for dropout in dropouts:
             if corrs:
                 mean = np.mean(corrs)
                 if mean > 0:
-                    to_print.append(f"\\cellcolor{{\\positive!{100*mean:.3f}}} ${'+' if mean > 0 else ''}{mean:.3f}$")
+                    to_print.append(f"\\cellcolor{{\\positive!{100*mean:.3f}}} $+{mean:.3f}$")
                 else:
                     to_print.append(f"\\cellcolor{{\\negative!{-100*mean:.3f}}} ${mean:.3f}$")
             

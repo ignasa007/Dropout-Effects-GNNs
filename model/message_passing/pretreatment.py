@@ -17,9 +17,9 @@ class ModelPretreatment:
         edge_weight = None
         if self.normalize:
             row, col = edge_index
-            deg = degree(col, num_nodes, dtype=dtype)
+            deg = degree(col, num_nodes, dtype=dtype)   # in-degree of the nodes
             deg_inv_sqrt = deg.pow(-0.5)
             deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
             edge_weight = deg_inv_sqrt[row] * deg_inv_sqrt[col]
-
+        
         return edge_index, edge_weight

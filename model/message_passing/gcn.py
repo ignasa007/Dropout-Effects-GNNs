@@ -31,7 +31,10 @@ class GCNLayer(GCNConv):
             in_channels=in_channels,
             out_channels=out_channels,
             add_self_loops=add_self_loops,
-            normalize=normalize,
+            # Cannot have `add_self_loops and not normalize` in GCNConv
+            # https://github.com/pyg-team/pytorch_geometric/blob/02176b7ee2b865ea0824b05cc65778be0ede47b3/torch_geometric/nn/conv/gcn_conv.py#L196
+            # But not necessary for our implementation, so passing a dummy value that is not used anywhere
+            normalize=True,
             bias=bias,
         )
         

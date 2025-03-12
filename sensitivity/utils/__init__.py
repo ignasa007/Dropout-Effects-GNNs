@@ -48,33 +48,42 @@ def compute_commute_times(edge_index, P=0.):
 
     return C
 
-def get_jacobian_norms(x, edge_index, mask, model, n_samples, config, others):
-
-    model.train()
+def get_jacobian_norms(x, edge_index, model, config, mask=None, n_samples=1):
 
     if mask is None:
-        dim0 = x.size(0) 
+        # compute full Jacobian, wrt all nodes' representations -- can be impractical 
+        dim0 = x.size(0)
     elif hasattr(mask, '__len__'):
         dim0 = len(mask)
     else:
+        # convert to a list so that the dimensions are preserved when taking a subset of node representations
+        # otherwise, out[mask, :] will be of size (output_dim,) instead of the desired size (1, output_dim)
         mask = [mask]
         dim0 = 1
 
-    jacobians = torch.zeros((dim0, config.gnn_layer_sizes[-1], x.size(0), others.input_dim))
-    n_samples = n_samples if config.drop_p > 0. else 1
-    for _ in range(1):
+    # If all dropout_prob == 0., then don't need to average over samples
+    #   I don't think this should be handled inside the method, but rather before calling it
+    # n_samples = n_samples if any((mp_layer.drop_strategy.dropout_prob>0. for mp_layer in model.message_passing)) else 1
+
+    model.train()
+    jacobians = torch.zeros((dim0, model.message_passing[-1].out_channels, x.size(0), x.size(1)), device=x.device)
+    for _ in range(n_samples):
+        # forward mode auto-diff is more efficient for computing derivates wrt more outputs than inputs
+        #   - not our use case, since the set of source nodes will usually be much larger than the set of targets
+        # reverse mode is more efficient when we have more inputs than outputs
         jacobians += jacrev(model, argnums=2)(mask, edge_index, x)
     jacobians /= n_samples
+    # take 1-norm over the input and output feature dimensions
     jacobian_norms = jacobians.transpose(1, 2).flatten(start_dim=2).norm(dim=2, p=1)
 
-    return jacobian_norms.detach().cpu().flatten()
+    return jacobian_norms.detach().cpu()
 
-def bin_jac_norms(jac_norms, bin_assignments, bins, agg='mean'):
+def aggregate(values, bin_assignments, bins, agg='mean'):
 
-    if jac_norms.ndim > 1:
-        jac_norms = jac_norms.flatten()
+    if values.ndim > 1:
+        values = values.flatten()
     
-    assert jac_norms.size() == bin_assignments.size()
+    assert values.size() == bin_assignments.size()
 
     if agg == 'mean':
         aggregator = torch.mean
@@ -85,9 +94,16 @@ def bin_jac_norms(jac_norms, bin_assignments, bins, agg='mean'):
     else:
         raise ValueError(f"Expected `agg` to be one of 'mean', 'mean_nz' or 'sum'. Instead received '{agg}'.")
     
-    aggregated_jac_norms = list()
+    '''
+    TODO: can be parallelized using broadcasting
+    Below is a memory inefficient way:
+        inclusion = bin_assignments.reshape(1, -1) == bins.reshape(-1, 1)   # shape (n_bins, n_sources)
+        members = values[inclusion]                                         # shape (n_bins, n_sources)
+        aggregated_members = aggregator(members, dim=1)
+    '''
+    aggregated_values = list()
     for bin in bins:
-        bin_members = jac_norms[torch.where(bin_assignments == bin)]
-        aggregated_jac_norms.append(aggregator(bin_members))
+        bin_members = values[torch.where(bin_assignments == bin)]
+        aggregated_values.append(aggregator(bin_members))
 
-    return torch.Tensor(aggregated_jac_norms)
+    return torch.Tensor(aggregated_values)

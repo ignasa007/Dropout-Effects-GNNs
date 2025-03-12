@@ -1,6 +1,7 @@
 import argparse
 import os
 import shutil
+from tqdm import tqdm
 import warnings; warnings.filterwarnings('ignore')
 
 import numpy as np
@@ -12,9 +13,9 @@ from utils.parse_logs import parse_metrics
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--datasets', type=str, nargs='+', choices=['Proteins', 'Mutag', 'Enzymes', 'Reddit', 'IMDb', 'Collab'])
-parser.add_argument('--gnns', type=str, nargs='+', choices=['GCN', 'GAT'])
-parser.add_argument('--dropouts', type=str, nargs='+', choices=['Dropout', 'DropMessage', 'DropEdge'])
+parser.add_argument('--datasets', type=str, nargs='+')
+parser.add_argument('--gnns', type=str, nargs='+')
+parser.add_argument('--dropouts', type=str, nargs='+')
 args = parser.parse_args()
 
 '''
@@ -48,10 +49,10 @@ def get_samples(dataset, gnn, dropout, drop_p):
             # print(f'Incomplete training run: {exp_dir_format}/{timestamp}')
             # shutil.rmtree(f'{exp_dir_format}/{timestamp}')
             continue
-        if np.max(train[metric]) < cutoffs[dataset]:
+        # if np.max(train[metric]) < cutoffs[dataset]:
             # print(f'Failed to learn: {exp_dir_format}/{timestamp}, {np.max(train[metric])} < {cutoffs[dataset]}')
             # shutil.rmtree(f'{exp_dir_format}/{timestamp}')
-            pass
+            # pass
         sample = test[metric][np.argmax(val[metric])]
         samples.append(sample)
 
@@ -60,14 +61,10 @@ def get_samples(dataset, gnn, dropout, drop_p):
 def plot(ax, dataset, gnn, dropout):
 
     means, stds = list(), list()
-    best_mean, best_drop_p, best_samples = float('-inf'), None, None
 
     for drop_p in drop_ps:
         samples = get_samples(dataset, gnn, dropout, drop_p)
-        mean, std = (np.mean(samples), np.std(samples)) if samples else (np.nan, np.nan)
-        # mean = np.max(samples)
-        if mean > best_mean:
-            best_mean, best_drop_p, best_samples = mean, drop_p, samples
+        mean, std = (np.mean(samples), np.std(samples)) if len(samples) >= 10 else (np.nan, np.nan)
         means.append(mean)
         stds.append(std)
     
@@ -75,49 +72,19 @@ def plot(ax, dataset, gnn, dropout):
     ax.plot(drop_ps, means, label=dropout)
     # ax.fill_between(drop_ps, means-stds, means+stds, alpha=0.2)
 
-    return best_drop_p, best_samples
-
-def is_normal(samples):
-
-    # Failed to reject the null hypothesis of normal distribution of data at 90% confidence
-    return stats.shapiro(samples)[0] > 0.1
-
-def compare_samples(no_drop_samples, best_drop_samples):
-
-    '''
-    Testing the hypothesis that NoDrop performs worse than the given Dropout method
-        under the null hypothesis of equal means.
-    '''
-
-    assert is_normal(no_drop_samples) and is_normal(best_drop_samples)
-
-    statistic, pvalue = stats.ttest_ind(
-        no_drop_samples,
-        best_drop_samples,
-        equal_var=False,    # Dropout samples should have a higher variance
-        alternative='less'  # The mean of NoDrop samples is less than the mean of BestDrop samples
-    )
-
-    return statistic, pvalue
-
 fig, axs = plt.subplots(len(args.datasets), len(args.gnns), figsize=(6.4*len(args.gnns), 4.8*len(args.datasets)))
 axs = axs.flatten() if isinstance(axs, np.ndarray) else (axs,)
 data_list = list()
 
-for i, dataset in enumerate(args.datasets):
+for i, dataset in tqdm(enumerate(args.datasets)):
     
     for j, gnn in enumerate(args.gnns):
     
-        ax = axs[i*len(args.gnns)+j]
-        
         no_drop_samples = get_samples(dataset, gnn, 'NoDrop', 0.0)
+        ax = axs[i*len(args.gnns)+j]
         ax.hlines(np.mean(no_drop_samples), drop_ps[0], drop_ps[-1], colors='red', linestyles='--')
-        
         for dropout in args.dropouts:
-            best_drop_p, best_drop_samples = plot(ax, dataset, gnn, dropout)
-            statistic, pvalue = compare_samples(no_drop_samples, best_drop_samples)
-            data_list.append((dropout, gnn, dataset, pvalue))
-
+            plot(ax, dataset, gnn, dropout)
         ax.grid()
         ax.legend()
 
@@ -125,10 +92,3 @@ fig.tight_layout()
 fn = f'./assets/black.png'
 os.makedirs(os.path.dirname(fn), exist_ok=True)
 plt.savefig(fn, bbox_inches='tight')
-
-index = ['Dropout', 'GNN', 'Dataset']
-data_cols = index + ['P-value']
-df = pd.DataFrame(data_list, columns=data_cols)
-df['Significant?'] = df['P-value'] < 0.1
-df = df.sort_values(index).set_index(index)
-print(df)

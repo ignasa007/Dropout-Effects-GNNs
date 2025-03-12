@@ -1,13 +1,12 @@
 import argparse
 import os
 import pickle
-from collections import defaultdict
 from tqdm import tqdm
 
 import torch
 import matplotlib.pyplot as plt
 
-from sensitivity.utils import bin_jac_norms
+from sensitivity.utils import aggregate
 from utils.format import format_dataset_name
 
 L = 6
@@ -48,7 +47,7 @@ for trained, ax in zip(('untrained', 'trained'), axs):
                 x_sd = shortest_distances.unique().int()
                 with open(f'{jac_norms_dir}/i={idx}/{P_dir}/{timestamp}/{trained}.pkl', 'rb') as f:
                     jac_norms = pickle.load(f)
-                y_sd = bin_jac_norms(jac_norms, shortest_distances, x_sd, args.agg)
+                y_sd = aggregate(jac_norms, shortest_distances, x_sd, args.agg)
                 mask, = torch.where(x_sd<=L)
                 sum_jac_norms[x_sd[mask]] += y_sd[mask]
                 count_jac_norms[x_sd[mask]] += 1

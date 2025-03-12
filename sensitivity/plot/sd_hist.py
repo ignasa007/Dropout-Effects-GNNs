@@ -5,7 +5,7 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
-from sensitivity.utils import bin_jac_norms
+from sensitivity.utils import aggregate
 
 
 L = 6
@@ -39,7 +39,7 @@ for trained, ax in zip(('untrained', 'trained'), axs):
 
             with open(f'{i_dir}/jac-norms/P={P}/{trained}.pkl', 'rb') as f:
                 jac_norms = pickle.load(f)
-            y_sd = bin_jac_norms(jac_norms, shortest_distances, x_sd, agg)  # expectation of jac-norms over bins
+            y_sd = aggregate(jac_norms, shortest_distances, x_sd, agg)  # expectation of jac-norms over bins
             
             sum_jac_norms[x_sd] += y_sd
             sum_bin_sizes[x_sd] += y_hist   # update ratios of edge-pairs at diff distances

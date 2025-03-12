@@ -4,7 +4,7 @@ from tqdm import tqdm
 import torch
 import matplotlib.pyplot as plt
 
-from sensitivity.utils import bin_jac_norms
+from sensitivity.utils import aggregate
 
 
 fig, ax = plt.subplots(1, 1, figsize=(6, 4))
@@ -39,7 +39,7 @@ for dropout, dataset, gnn, L, drop_p in tqdm(models):
         for sample in (fn for fn in os.listdir(i_dir) if fn.startswith('sample-')):
             
             jac_norms = torch.load(f'{i_dir}/{sample}')
-            y_sd = bin_jac_norms(jac_norms, shortest_distances, x_sd, agg='sum')
+            y_sd = aggregate(jac_norms, shortest_distances, x_sd, agg='sum')
             sum_jac_norms[int(sample.removeprefix('sample-').removesuffix('.pkl'))-1, x_sd] += y_sd
 
     # average over source nodes in a single large network, or multiple small graphs

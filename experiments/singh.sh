@@ -1,11 +1,11 @@
 #!/bin/bash
 
-total_samples=30
+total_samples=20
 dataset=${1}
 gnn=${2}
 device_index=${3}
 
-dropouts=("NoDrop" "DropEdge" "Dropout" "DropMessage")
+dropouts=("NoDrop" "DropEdge" "Dropout" "DropMessage" "DropNode" "DropAgg" "DropGNN")
 drop_ps=$(seq 0.1 0.1 0.9)
 
 hidden_size=64

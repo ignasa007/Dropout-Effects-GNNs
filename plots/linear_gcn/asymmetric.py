@@ -13,7 +13,7 @@ from torch_geometric.datasets import TUDataset
 from torch_geometric.utils import degree, remove_self_loops
 import matplotlib.pyplot as plt
 
-from sensitivity.utils import to_adj_mat, compute_shortest_distances, bin_jac_norms
+from sensitivity.utils import to_adj_mat, compute_shortest_distances, aggregate
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, required=True, choices=['Proteins', 'Mutag'])
@@ -55,7 +55,7 @@ for m in tqdm(range(MOLECULE_SAMPLES)):
         P_p = torch.where(diag>0., diag, non_diag)  # doesn't matter if A is with self-loops or not
         P_p_L = torch.matrix_power(P_p, L).flatten()
         
-        y_sd = bin_jac_norms(P_p_L, shortest_distances, x_sd, agg='mean')
+        y_sd = aggregate(P_p_L, shortest_distances, x_sd, agg='mean')
         sum_sensitivity[p][m, x_sd] += y_sd
         count_sensitivity[p][m, x_sd] += 1
 
@@ -85,7 +85,6 @@ axl.set_yscale('log')
 axl.grid()
 axl.legend(loc='lower left', bbox_to_anchor=(0.05, 0.05), fontsize=18)
 
-# fig.suptitle(args.dataset, fontsize=16)
 fig.tight_layout()
 fn = f'./assets/linear-gcn/asymmetric/{args.dataset}.png'
 os.makedirs(os.path.dirname(fn), exist_ok=True)

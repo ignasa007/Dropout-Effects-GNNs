@@ -13,7 +13,7 @@ from torch_geometric.datasets import TUDataset
 from torch_geometric.utils import degree, remove_self_loops
 import matplotlib.pyplot as plt
 
-from sensitivity.utils import to_adj_mat, compute_shortest_distances, bin_jac_norms
+from sensitivity.utils import to_adj_mat, compute_shortest_distances, aggregate
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, required=True, choices=['Proteins', 'Mutag'])
@@ -60,7 +60,7 @@ for m in tqdm(range(MOLECULE_SAMPLES)):
             P_l = P @ P_l
             P_L += P_l
         
-        y_sd = bin_jac_norms(P_L, shortest_distances, x_sd, agg='mean')
+        y_sd = aggregate(P_L, shortest_distances, x_sd, agg='mean')
         sum_sensitivity[p][m, x_sd] += y_sd
         count_sensitivity[p][m, x_sd] += 1
 

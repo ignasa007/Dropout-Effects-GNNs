@@ -12,7 +12,7 @@ from torch_geometric.datasets import TUDataset
 from torch_geometric.utils import degree, add_remaining_self_loops, dropout_edge, dropout_node
 import matplotlib.pyplot as plt
 
-from sensitivity.utils import to_adj_mat, compute_shortest_distances, bin_jac_norms
+from sensitivity.utils import to_adj_mat, compute_shortest_distances, aggregate
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, required=True, choices=['Proteins', 'Mutag'])
@@ -99,7 +99,7 @@ for name, drop in zip(('NoDrop', 'DropEdge', 'DropNode', 'DropAgg', 'DropGNN'), 
                 P += sample
             P /= DROPEDGE_SAMPLES
             
-            y_sd = bin_jac_norms(P.flatten(), shortest_distances, (L,), agg='mean')
+            y_sd = aggregate(P.flatten(), shortest_distances, (L,), agg='mean')
             sum_sensitivity[i, m] += y_sd.item()
 
     mean_sensitivity = sum_sensitivity.mean(dim=1)

@@ -31,7 +31,7 @@ This is the official code repository for the paper [**Effects of Random Edge-Dro
 - `sensitvity` - studying the raw sensitivity between nodes at different distances
     - `log` - log the sensitivity measures (takes a while to run)
     - `plot` - plot the sensitivity between nodes against eg. shortest distance
-    - `utils` - utility functions for these experiments, eg. `compute_shortest_distances`, `bin_jac_norms`
+    - `utils` - utility functions for these experiments, eg. `compute_shortest_distances`, `aggregate`
 - `utils` - utility files for model training and logging
 
 ## Setup

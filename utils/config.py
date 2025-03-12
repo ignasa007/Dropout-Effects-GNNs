@@ -1,4 +1,5 @@
 import argparse
+from distutils.util import strtobool
 from utils.format import format_dataset_name, format_layer_name, \
     format_dropout_name, format_activation_name
 
@@ -22,22 +23,20 @@ def parse_arguments(return_others=False):
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        '--dataset', type=str, required=True,
-        # action=lambda dataset: format_dataset_name.get(dataset.lower()),
+        '--dataset', type=lambda x: format_dataset_name.get(x.lower()), required=True,
         help='The dataset to be trained on.'
     )
     parser.add_argument(
-        '--add_self_loops', type=bool, default=True,
+        '--add_self_loops', type=lambda x: bool(strtobool(x)), default=True,
         help='Boolean value indicating whether to add self-loops during message passing.'
     )
     parser.add_argument(
-        '--normalize', type=bool, default=True,
+        '--normalize', type=lambda x: bool(strtobool(x)), default=True,
         help='Boolean value indicating whether to normalize edge weights during message passing.'
     )
 
     parser.add_argument(
-        '--gnn', type=str, required=True,
-        # action=lambda gnn: format_layer_name.get(gnn.lower()),
+        '--gnn', type=lambda x: format_layer_name.get(x.lower()), required=True,
         help='The backbone model.'
     )
     parser.add_argument(
@@ -45,12 +44,11 @@ def parse_arguments(return_others=False):
         help="Hidden layers' sizes for the GNN."
     )
     parser.add_argument(
-        '--gnn_activation', type=str, default='ReLU',
-        # action=lambda activation: format_activation_name.get(activation.lower()),
+        '--gnn_activation', type=lambda x: format_activation_name.get(x.lower()), default='ReLU',
         help='The non-linearity to use for message-passing.'
     )
     parser.add_argument(
-        '--bias', type=bool, default=True,
+        '--bias', type=lambda x: bool(strtobool(x)), default=True,
         help='Boolean value indicating whether to add bias after message aggregation.'
     )
 
@@ -59,14 +57,12 @@ def parse_arguments(return_others=False):
         help="Hidden layers' sizes for the readout FFN."
     )
     parser.add_argument(
-        '--ffn_activation', type=str, default='ReLU',
-        # action=lambda activation: format_activation_name.get(activation.lower()),
+        '--ffn_activation', type=lambda x: format_activation_name.get(x.lower()), default='ReLU',
         help='The non-linearity to use for readout.'
     )
 
     parser.add_argument(
-        '--dropout', type=str, default='NoDrop',
-        # action=lambda dropout: format_dropout_name.get(dropout.lower()),
+        '--dropout', type=lambda x: format_dropout_name.get(x.lower()), default='NoDrop',
         help='The dropping method.'
     )
     parser.add_argument(
@@ -87,7 +83,7 @@ def parse_arguments(return_others=False):
         help='Weight decay for Adam optimizer.'
     )
     parser.add_argument(
-        '--schedule_lr', type=bool, default=True,
+        '--schedule_lr', type=lambda x: bool(strtobool(x)), default=True,
         help='Whether to reduce the learning rate if the validation metrics plateau.'
     )
 
@@ -114,6 +110,8 @@ def parse_arguments(return_others=False):
     config, _ = parser.parse_known_args()
     config.gnn_layer_sizes = layer_sizes(config.gnn_layer_sizes)
     config.ffn_layer_sizes = layer_sizes(config.ffn_layer_sizes)
+    if config.dropout == 'NoDrop':
+        config.drop_p = 0.0 
 
     if not return_others:
         return config

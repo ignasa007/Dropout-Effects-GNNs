@@ -44,7 +44,7 @@ cutoffs = {
 
 metric = 'Accuracy'
 drop_ps = np.round(np.arange(0.1, 1, 0.1), decimals=1)
-exp_dir = 'results/{dropout}/{dataset}/{gnn}/L=4/P={drop_p}'
+exp_dir = './results/{dropout}/{dataset}/{gnn}/L=4/P={drop_p}'
 
 
 def get_samples(dataset, gnn, dropout, drop_p):
@@ -66,7 +66,7 @@ def get_samples(dataset, gnn, dropout, drop_p):
 
     return samples
 
-def plot(dataset, gnn, dropout):
+def get_best(dataset, gnn, dropout):
 
     best_mean, best_drop_p, best_samples = float('-inf'), None, None
 
@@ -106,20 +106,20 @@ data = dict()
 for dataset in tqdm(datasets):    
     for gnn in gnns:
         no_drop_samples = get_samples(dataset, gnn, 'NoDrop', 0.0)
-        no_drop_mean, no_drop_std = (np.mean(no_drop_samples), np.std(no_drop_samples))
+        no_drop_mean, no_drop_std = np.mean(no_drop_samples), np.std(no_drop_samples, ddof=1)
         for dropout in dropouts:
-            best_drop_p, best_drop_samples = plot(dataset, gnn, dropout)
+            best_drop_p, best_drop_samples = get_best(dataset, gnn, dropout)
             if best_drop_samples is None:
                 continue
-            best_drop_mean, best_drop_std = (np.mean(best_drop_samples), np.std(best_drop_samples))
-            cell_value = f'{100*(best_drop_mean-no_drop_mean):.3f}' # \\pm {100*np.sqrt(best_drop_std**2+no_drop_std**2):.3f}'
+            best_drop_mean, best_drop_std = np.mean(best_drop_samples), np.std(best_drop_samples, ddof=1)
+            cell_value = f'{100*(best_drop_mean-no_drop_mean):.3f}'
             if cell_value[0].isdigit():
                 cell_value = f'+{cell_value}'
             statistic, pvalue = compare_samples(no_drop_samples, best_drop_samples)
             if pvalue > 0.1:
-                cell_value = f"\\cellcolor{{\\negative!{100*(pvalue-0.1)/0.9:.3f}}} ${cell_value}$"
+                cell_value = f'\\cellcolor{{\\negative!{100*(pvalue-0.1)/0.9:.3f}}} ${cell_value}$'
             else:
-                cell_value = f"\\cellcolor{{\\positive!{100*(0.1-pvalue)/0.1:.3f}}} ${cell_value}$"
+                cell_value = f'\\cellcolor{{\\positive!{100*(0.1-pvalue)/0.1:.3f}}} ${cell_value}$'
             data[(dropout, gnn, dataset)] = cell_value
 
 for dropout in dropouts:
@@ -130,4 +130,7 @@ for dropout in dropouts:
         for dataset in datasets:
             to_print.append(data.get((dropout, gnn, dataset), ''))
         print(f"{' & '.join(to_print)} \\\\ ", end='')
-        print('\\cline{2-7}' if gnn == 'GCN' else '\\hline')
+        if gnn != gnns[-1]:
+            print('\\cline{2-8}')
+        else:
+            print('\\hline')

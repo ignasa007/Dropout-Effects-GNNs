@@ -4,6 +4,7 @@ from tqdm import tqdm
 import warnings; warnings.filterwarnings('ignore')
 
 import numpy as np
+from scipy import stats
 
 from utils.parse_logs import parse_metrics
 
@@ -18,7 +19,6 @@ elif args.graph:
     datasets = ('Proteins', 'Mutag', 'Enzymes', 'Reddit', 'IMDb', 'Collab')
 else:
     raise ValueError('At least one of args.node and args.graph needs to be true.')
-
 gnns = ('GCN', 'GAT')
 dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessage')
 
@@ -66,24 +66,54 @@ def get_samples(dataset, gnn, dropout, drop_p):
 
     return samples
 
-def find_best_drop_p(dataset, gnn, dropout):
+def get_best(dataset, gnn, dropout):
 
-    best_mean, best_drop_p = float('-inf'), None
+    best_mean, best_drop_p, best_samples = float('-inf'), None, None
 
     for drop_p in drop_ps:
         samples = get_samples(dataset, gnn, dropout, drop_p)
-        mean = np.mean(samples)
+        mean = np.mean(samples) if len(samples) >= 10 else np.nan
         if mean > best_mean:
-            best_mean, best_drop_p = mean, drop_p
+            best_mean, best_drop_p, best_samples = mean, drop_p, samples
     
-    return best_drop_p
+    return best_drop_p, best_samples
+
+def color_effect_size(value):
+
+    if value < -0.65:      # Between -inf and -0.65, includes -0.8
+        return '\\cellcolor{\\negative!80} '
+    elif value < -0.35:    # Between -0.65 and -0.35, includes -0.5
+        return '\\cellcolor{\\negative!50} '
+    elif value < -0.10:    # Between -0.35 and -0.10, includes -0.2
+        return '\\cellcolor{\\negative!20} '
+    elif value < +0.10:    # Between -0.10 and +0.10, includes 0.0
+        return ''
+    elif value < +0.35:    # Between +0.10 and +0.35, includes +0.2
+        return '\\cellcolor{\\positive!20} '
+    elif value < +0.65:    # Between +0.35 and +0.65, includes +0.5
+        return '\\cellcolor{\\positive!50} '
+    else:                  # Between +0.65 and +inf, includes +0.8
+        return '\\cellcolor{\\positive!80} '
 
 data = dict()
 
 for dataset in tqdm(datasets):    
     for gnn in gnns:
+        no_drop_samples = get_samples(dataset, gnn, 'NoDrop', 0.0)
+        no_drop_mean, no_drop_std = np.mean(no_drop_samples), np.std(no_drop_samples, ddof=1)
         for dropout in dropouts:
-            data[(dropout, gnn, dataset)] = find_best_drop_p(dataset, gnn, dropout)
+            best_drop_p, best_drop_samples = get_best(dataset, gnn, dropout)
+            if best_drop_samples is None:
+                continue
+            best_drop_mean, best_drop_std = np.mean(best_drop_samples), np.std(best_drop_samples, ddof=1)
+            # Assuming that the sample sizes are the same
+            cohens_d = (best_drop_mean-no_drop_mean) / np.sqrt((best_drop_std**2+no_drop_std**2)/2)
+            # Small sample size correction
+            hedges_correction = 1 - 3 / (4*(len(best_drop_samples)+len(no_drop_samples))-9)
+            value = f'{hedges_correction*cohens_d:.3f}'
+            if value[0].isdigit():
+                value = f'+{value}'
+            data[(dropout, gnn, dataset)] = f'{color_effect_size(float(value))}{value}'
 
 for dropout in dropouts:
     print(f'\\multirow{{2}}{{*}}{{{dropout}}}', end='')

@@ -19,6 +19,8 @@ dataset: BaseDataset = get_dataset(config.dataset, config=config, others=others,
 others.input_dim = dataset.num_features
 others.output_dim = dataset.output_dim
 others.task_name = format_task_name.get(dataset.task_name.lower())
+if others.task_name.lower().startswith('node') and hasattr(others, 'pooler'):
+    delattr(others, 'pooler')
 
 model = Model(config, others)
 if config.dataset.lower().startswith('SyntheticZINC'.lower()) and others.model_sample is not None:

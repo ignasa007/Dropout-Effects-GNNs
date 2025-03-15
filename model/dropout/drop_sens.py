@@ -5,7 +5,7 @@ import numpy as np
 import sympy
 from sympy.abc import x
 import torch
-from torch_geometric.utils import degree
+from torch_geometric.utils import degree, remove_self_loops
 from model.dropout.base import BaseDropout
 
 
@@ -22,13 +22,15 @@ class DropSens(BaseDropout):
 
     def compute_q(self, edge_index):
 
+        # Assuming edge index does not have self loops
         degrees = degree(edge_index[1]).int().tolist()
         unique_degrees = np.unique(degrees) # Sorted array
 
         mapper = dict()
-        for d_i in enumerate(unique_degrees):
-            q_i = float(sympy.N(sympy.real_roots(d_i*(1-self.c)*(1-x)-x+x**(d_i+1))[-2]))
-            if q_i > self.dropout_prob: break
+        for d_i in unique_degrees:
+            q_i = float(sympy.N(sympy.real_roots(d_i*(1-self.c)*(1-x)-x+x**(d_i+1))[-2])) if d_i > 0 else 0.
+            if q_i < 0: raise ValueError(f'c={self.c} and d_i={d_i} => q_i={q_i:.6f}.')
+            if q_i > self.dropout_prob: break   # Because q_i monontonic wrt d_i, and unique_degrees is sorted
             mapper[d_i] = q_i
         
         self.q = torch.Tensor(list(map(lambda d_i: mapper.get(d_i, self.dropout_prob), degrees)))
@@ -45,7 +47,8 @@ class DropSens(BaseDropout):
         if not hasattr(self, 'q'):
             self.compute_q(edge_index)
         
-        edge_mask = torch.rand(edge_index.size(1)) >= self.q[edge_index[1]]
+        edge_mask = self.q[edge_index[1].to('cpu')] <= torch.rand(edge_index.size(1))
+        edge_mask = edge_mask.to(edge_index.device)
         edge_index = edge_index[:, edge_mask]
         edge_attr = edge_attr[edge_mask] if edge_attr is not None else None
 

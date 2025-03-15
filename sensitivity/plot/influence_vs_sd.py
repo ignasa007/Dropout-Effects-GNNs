@@ -12,15 +12,18 @@ PROBLEM: using sensitivity instead of influence distribution can give a distorte
     Can similarly extend this argument to more number of nodes, just need the inequality m/n+n/m > 2
 SOLUTION: using influence distribution removes the dependence on normalization
     The rest is kept the same: compute a weighted average of influence at each distance, 
-    weights implicitly being the number of neighbors, eg. `m` and `n above`.
+    weights implicitly being the number of neighbors, eg. `m` and `n` above.
 '''
 
 import warnings; warnings.filterwarnings('ignore')
 import os
 import argparse
 from tqdm import tqdm
+
+import numpy as np
 import torch
 import matplotlib.pyplot as plt
+
 from sensitivity.utils import aggregate
 
 parser = argparse.ArgumentParser()
@@ -28,17 +31,19 @@ parser.add_argument('--L', type=int, default=6)
 parser.add_argument('--drop_p', type=float, default=0.5)
 args = parser.parse_args()
 
+dataset = 'Cora'
 models = (
-    ('NoDrop', 'Cora', 'GCN'),
-    # ('NoDrop', 'Cora', 'ResGCN'),
-    # ('DropEdge', 'Cora', 'GCN'),
-    # ('DropNode', 'Cora', 'GCN'),
-    # ('DropAgg', 'Cora', 'GCN'),
-    # ('DropGNN', 'Cora', 'GCN'),
-    # ('Dropout', 'Cora', 'GCN'),
-    # ('DropMessage', 'Cora', 'GCN'),
-    # ('SkipNode', 'Cora', 'GCN'),
-    # ('DropSens', 'Cora', 'GCN'),
+    ('NoDrop', 'GCN'),
+    # ('NoDrop', 'ResGCN'),
+    ('DropEdge', 'GCN'),
+    ('Dropout', 'GCN'),
+    ('DropMessage', 'GCN'),
+    ('', ''),
+    ('DropNode', 'GCN'),
+    ('DropAgg', 'GCN'),
+    ('DropGNN', 'GCN'),
+    # ('SkipNode', 'GCN'),
+    # ('DropSens', 'GCN'),
 )
 '''
 Difference between agg='sum' and agg='mean':
@@ -50,11 +55,15 @@ agg='mean' treats each target node equally, computing an unweighted mean of the
 '''
 agg = 'mean'
 
-jac_norms_dir = './tmp_jac-norms'
-fig, ax = plt.subplots(1, 1, figsize=(6, 4)); ncol = 4
+jac_norms_dir = './jac-norms'
+fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8)); ncol = 2
 MODEL_SAMPLES = 25
 
-for dropout, dataset, gnn in tqdm(models):
+for dropout, gnn in tqdm(models):
+
+    if not dropout or not dataset or not gnn:
+        ax.plot(np.nan, np.nan, '-', color='none', label=' ')
+        continue
 
     dataset_dir = f'{jac_norms_dir}/{dataset}'
     P = 0.0 if dropout == 'NoDrop' else args.drop_p
@@ -78,7 +87,6 @@ for dropout, dataset, gnn in tqdm(models):
         count_pairs[x_sd] += (count if agg == 'sum' else 1)
         
         for sample in range(1, MODEL_SAMPLES+1):
-            '''TODO: jac_norms.sum() == 0. in some cases with DropNode'''
             jac_norms = torch.load(f'{model_dir}/sample={sample}.pkl')
             '''
             Reasons for computing the influence right away, 
@@ -89,7 +97,11 @@ for dropout, dataset, gnn in tqdm(models):
             Essentially, we want scale invariance in order to quantify over-squashing as
                 sensitivity to distant nodes *after* controlling total sensitivity.
             '''
-            influence_distribution = jac_norms / jac_norms.sum()
+            if jac_norms.sum().item() > 0.:
+                influence_distribution = jac_norms / jac_norms.sum()
+            else:
+                '''jac_norms.sum() == 0. in some cases with DropNode'''
+                influence_distribution = torch.zeros_like(jac_norms)
             y_sd = aggregate(influence_distribution, shortest_distances, x_sd, agg=agg)
             '''
             OBSERVATION: For non-edge-dropping methods, influence of neighbors can be less or even 
@@ -108,7 +120,8 @@ for dropout, dataset, gnn in tqdm(models):
     '''Average over initialization and/or mask samples'''
     std, mean = torch.std_mean(mean_influence, dim=0)
     x = torch.arange(args.L+1)
-    ax.plot(x, mean, label=f'{gnn}, {dropout}({P})')
+    # ax.plot(x, mean, label=f'{gnn}, {dropout}({P})')
+    ax.plot(x, mean, label=dropout)
     # ax.fill_between(x, mean-std, mean+std, alpha=0.2)
 
 ax.set_xlabel('Shortest Distances', fontsize=18)
@@ -117,7 +130,7 @@ ax.set_yscale('log')
 ax.grid()
 
 handles, labels = ax.get_legend_handles_labels()
-fig.legend(handles, labels, loc='lower center', fontsize=15, ncol=ncol, bbox_to_anchor = (0, -0.15, 1, 1))
+fig.legend(handles, labels, loc='lower left', fontsize=15, ncol=ncol, bbox_to_anchor = (0.132, 0.135))
 fig.tight_layout()
 
 fn = f'./assets/influence.png'

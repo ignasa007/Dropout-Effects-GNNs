@@ -27,7 +27,7 @@ ps = np.arange(0, 1, 0.1)
 
 
 def no_drop(edge_index, num_nodes, p):
-    dropped_edge_index = add_remaining_self_loops(edge_index)[0]
+    dropped_edge_index = add_remaining_self_loops(edge_index, num_nodes=num_nodes)[0]
     A = to_adj_mat(dropped_edge_index, num_nodes=num_nodes)
     in_deg_inv_sqrt = degree(dropped_edge_index[1], num_nodes=num_nodes).pow(-1)
     in_deg_inv_sqrt[in_deg_inv_sqrt == float('inf')] = 0
@@ -35,7 +35,7 @@ def no_drop(edge_index, num_nodes, p):
     return sample
 
 def drop_edge(edge_index, num_nodes, p):
-    dropped_edge_index = add_remaining_self_loops(dropout_edge(edge_index, p, force_undirected=False)[0])[0]
+    dropped_edge_index = add_remaining_self_loops(dropout_edge(edge_index, p, force_undirected=False)[0], num_nodes=num_nodes)[0]
     A = to_adj_mat(dropped_edge_index, num_nodes=num_nodes)
     in_deg_inv_sqrt = degree(dropped_edge_index[1], num_nodes=num_nodes).pow(-1)
     in_deg_inv_sqrt[in_deg_inv_sqrt == float('inf')] = 0
@@ -43,7 +43,7 @@ def drop_edge(edge_index, num_nodes, p):
     return sample
 
 def drop_node(edge_index, num_nodes, p):
-    edge_index = add_remaining_self_loops(edge_index)[0]
+    edge_index = add_remaining_self_loops(edge_index, num_nodes=num_nodes)[0]
     A = to_adj_mat(edge_index, num_nodes=num_nodes)
     in_deg_inv_sqrt = degree(edge_index[1], num_nodes=num_nodes).pow(-1)
     in_deg_inv_sqrt[in_deg_inv_sqrt == float('inf')] = 0
@@ -53,7 +53,7 @@ def drop_node(edge_index, num_nodes, p):
 
 def drop_agg(edge_index, num_nodes, p):
     node_mask = torch.bernoulli((1-p)*torch.ones(num_nodes)).bool(); edge_mask = node_mask[edge_index[1]]
-    dropped_edge_index = add_remaining_self_loops(edge_index[:, edge_mask])[0]
+    dropped_edge_index = add_remaining_self_loops(edge_index[:, edge_mask], num_nodes=num_nodes)[0]
     A = to_adj_mat(dropped_edge_index, num_nodes=num_nodes)
     in_deg_inv_sqrt = degree(dropped_edge_index[1], num_nodes=num_nodes).pow(-1)
     in_deg_inv_sqrt[in_deg_inv_sqrt == float('inf')] = 0
@@ -61,7 +61,7 @@ def drop_agg(edge_index, num_nodes, p):
     return sample
 
 def drop_gnn(edge_index, num_nodes, p):
-    dropped_edge_index = add_remaining_self_loops(dropout_node(edge_index, p)[0])[0]
+    dropped_edge_index = add_remaining_self_loops(dropout_node(edge_index, p)[0], num_nodes=num_nodes)[0]
     A = to_adj_mat(dropped_edge_index, num_nodes=num_nodes, assert_connected=False)
     in_deg_inv_sqrt = degree(dropped_edge_index[1], num_nodes=num_nodes).pow(-1)
     in_deg_inv_sqrt[in_deg_inv_sqrt == float('inf')] = 0

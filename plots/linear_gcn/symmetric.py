@@ -1,85 +1,47 @@
-'''
-Poor naming of the file :(
-    considers the sensitivity in the case the propagation matrix is D^{-1/2}AD^{-1/2}
-'''
-
+import warnings; warnings.filterwarnings('ignore')
 import os
-import argparse
-from tqdm import tqdm
 
 import numpy as np
 import torch
-from torch_geometric.datasets import TUDataset
-from torch_geometric.utils import degree, add_remaining_self_loops, dropout_edge
+from torch_geometric.datasets import Planetoid
+from torch_geometric.utils import degree, remove_self_loops, add_remaining_self_loops, dropout_edge
+from torch_geometric.utils.num_nodes import maybe_num_nodes
 import matplotlib.pyplot as plt
 
 from sensitivity.utils import to_adj_mat, compute_shortest_distances, aggregate
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--dataset', type=str, required=True, choices=['Proteins', 'Mutag'])
-args = parser.parse_args()
-
 L = 6; ls = range(L+1)
-MOLECULE_SAMPLES = 100
 DROPEDGE_SAMPLES = 20
-dataset = TUDataset(root='./data/TUDataset', name=args.dataset.upper(), use_node_attr=True)
-indices = np.where(np.array([molecule.num_nodes for molecule in dataset]) <= 60)[0]
+dataset = Planetoid(root='./data/Planetoid', name='Cora')
 ps = np.arange(0, 1, 0.1)
 
-sum_sensitivity = {p: torch.zeros(MOLECULE_SAMPLES, L+1) for p in ps}
-count_sensitivity = {p: torch.zeros_like(sum_sensitivity[p]) for p in ps}
+edge_index = remove_self_loops(dataset.edge_index)[0]
+num_nodes = maybe_num_nodes(edge_index)
+
+shortest_distances = compute_shortest_distances(edge_index, num_nodes).flatten()
+degrees = degree(edge_index[1], num_nodes)  # needs to be without self-loops
+x_sd = shortest_distances.unique().int()
+x_sd = x_sd[torch.logical_and(0<=x_sd, x_sd<=L)]
+
 fig, (axp, axl) = plt.subplots(1, 2, figsize=(12.8, 4.8))
-
-for m in tqdm(range(MOLECULE_SAMPLES)):
-
-    while True:
-        i = np.random.choice(indices)
-        molecule = dataset[i]
-        edge_index = molecule.edge_index
-        try:
-            shortest_distances = compute_shortest_distances(edge_index).flatten()
-        except AssertionError:
-            continue
-        break
-
-    # edge_index = torch.Tensor([[0, 1, 1, 1, 2, 2, 3, 3], [1, 0, 2, 3, 1, 3, 1, 2]]).type(torch.int64)
-    x_sd = shortest_distances.unique().int()
-    x_sd = x_sd[x_sd<=L]
-    
-    for p in ps:
-            
-        P_p = torch.zeros(molecule.num_nodes, molecule.num_nodes)
-        
-        for _ in range(DROPEDGE_SAMPLES):
-        
-            dropped_edge_index = add_remaining_self_loops(dropout_edge(edge_index, p, force_undirected=False)[0])[0]
-            A = to_adj_mat(dropped_edge_index, num_nodes=molecule.num_nodes)
-        
-            out_deg_inv_sqrt = degree(dropped_edge_index[0], num_nodes=molecule.num_nodes).pow(-0.5)
-            out_deg_inv_sqrt[out_deg_inv_sqrt == float('inf')] = 0
-        
-            in_deg_inv_sqrt = degree(dropped_edge_index[1], num_nodes=molecule.num_nodes).pow(-0.5)
-            in_deg_inv_sqrt[in_deg_inv_sqrt == float('inf')] = 0
-        
-            P_p += torch.diag(in_deg_inv_sqrt) @ A @ torch.diag(out_deg_inv_sqrt)
-        
-        P_p /= DROPEDGE_SAMPLES
-        P_p_L = torch.matrix_power(P_p, L).flatten()
-        
-        y_sd = aggregate(P_p_L, shortest_distances, x_sd, agg='mean')
-        sum_sensitivity[p][m, x_sd] += y_sd
-        count_sensitivity[p][m, x_sd] += 1
-
-
-data = torch.nan * torch.zeros(len(ps), L+1)
+data = torch.nan * torch.zeros(len(ps), len(ls))
 
 for i, p in enumerate(ps):
+        
+    P_p = torch.zeros((num_nodes, num_nodes))
+    for _ in range(DROPEDGE_SAMPLES):
+        dropped_edge_index = add_remaining_self_loops(dropout_edge(edge_index, p, force_undirected=False)[0], num_nodes=num_nodes)[0]
+        A = to_adj_mat(dropped_edge_index, num_nodes=num_nodes)
+        out_deg_inv_sqrt = degree(dropped_edge_index[0], num_nodes=num_nodes).pow(-0.5)
+        out_deg_inv_sqrt[out_deg_inv_sqrt == float('inf')] = 0
+        in_deg_inv_sqrt = degree(dropped_edge_index[1], num_nodes=num_nodes).pow(-0.5)
+        in_deg_inv_sqrt[in_deg_inv_sqrt == float('inf')] = 0
+        P_p += torch.diag(in_deg_inv_sqrt) @ A @ torch.diag(out_deg_inv_sqrt)
+    P_p /= DROPEDGE_SAMPLES # Expected propogation matrix under symmetric normalization
 
-    # to avoid zero division error in case no graph hits shortest distance L
-    dim_to_keep = (count_sensitivity[p]>0).any(dim=0)
-    x = torch.where(dim_to_keep)[0]
-    y = sum_sensitivity[p][:, dim_to_keep].sum(dim=0) / count_sensitivity[p][:, dim_to_keep].sum(dim=0)
-    data[i, x] = y
+    P_p_L = torch.matrix_power(P_p, L).flatten()
+    y_sd = aggregate(P_p_L, shortest_distances, x_sd, agg='mean')
+    data[i] = y_sd
 
 for p, datap in list(zip(ps, data))[::2]:
     axp.plot(ls, datap, label=f'q = {p:.1f}')
@@ -96,8 +58,7 @@ axl.set_yscale('log')
 axl.grid()
 axl.legend(loc='lower left', bbox_to_anchor=(0.05, 0.05), fontsize=18)
 
-# fig.suptitle(args.dataset, fontsize=16)
 fig.tight_layout()
-fn = f'./assets/linear-gcn/symmetric/{args.dataset}.png'
+fn = f'./assets/linear-gcn/symmetric.png'
 os.makedirs(os.path.dirname(fn), exist_ok=True)
 plt.savefig(fn, bbox_inches='tight')

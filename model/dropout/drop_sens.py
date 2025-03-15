@@ -5,7 +5,7 @@ import numpy as np
 import sympy
 from sympy.abc import x
 import torch
-from torch_geometric.utils import degree, remove_self_loops
+from torch_geometric.utils import degree
 from model.dropout.base import BaseDropout
 
 
@@ -19,21 +19,49 @@ class DropSens(BaseDropout):
 
         super(DropSens, self).__init__(dropout_prob)    # Maximum value q_i can take
         self.c = others.info_loss_ratio
+        self.node_level_task = others.task_name.lower().startswith('node')
 
-    def compute_q(self, edge_index):
+    def init_mapper(self, edge_index):
 
         # Assuming edge index does not have self loops
-        degrees = degree(edge_index[1]).int().tolist()
-        unique_degrees = np.unique(degrees) # Sorted array
+        degrees = degree(edge_index[1]).int()       # Node index -> node degree
 
-        mapper = dict()
-        for d_i in unique_degrees:
-            q_i = float(sympy.N(sympy.real_roots(d_i*(1-self.c)*(1-x)-x+x**(d_i+1))[-2])) if d_i > 0 else 0.
-            if q_i < 0: raise ValueError(f'c={self.c} and d_i={d_i} => q_i={q_i:.6f}.')
-            if q_i > self.dropout_prob: break   # Because q_i monontonic wrt d_i, and unique_degrees is sorted
-            mapper[d_i] = q_i
+        if self.node_level_task:
+            # If node level task, compute mapper *once*, only for the valid degrees, 
+            # since they won't change in each run
+            ds = torch.unique(degrees).tolist()     # Sorted array
+            self.mapper = torch.nan * torch.ones(ds[-1]+1)
+        else:
+            # If graph level task, compute mapper for all d upto max(unique_degrees), 
+            # because degrees will change in each run
+            ds = range(0, degrees.max().item()+1)
+            self.mapper = self.dropout_prob * torch.ones(ds[-1]+1)
         
-        self.q = torch.Tensor(list(map(lambda d_i: mapper.get(d_i, self.dropout_prob), degrees)))
+        for d in ds:
+            q = float(sympy.N(sympy.real_roots(d*(1-self.c)*(1-x)-x+x**(d+1))[-2])) if d>0 else 0.
+            if q > self.dropout_prob:
+                break   # Because q monontonic wrt d, and unique_degrees is sorted
+            self.mapper[d] = q
+
+    def update_mapper(self, degrees):
+
+        # If q has been computed for all degrees, simply return 
+        if degrees.max().item() < self.mapper.size(0):
+            return
+
+        # Set max dropping probability for d for which q was not computed before
+        ds = range(len(self.mapper), degrees.max().item()+1)
+        self.mapper = torch.cat((self.mapper, self.dropout_prob*torch.ones(len(ds))))
+        
+        # If q had already been maxed out, no need to compute even once
+        if self.mapper[ds[0]-1] == self.dropout_prob:
+            return
+        
+        for d in ds:
+            q = float(sympy.N(sympy.real_roots(d*(1-self.c)*(1-x)-x+x**(d+1))[-2])) if d>0 else 0.
+            # Because q monontonic wrt d, and unique_degrees is sorted
+            if q > self.dropout_prob: break
+            self.mapper[d] = q
 
     def apply_feature_mat(self, x, training=True):
 
@@ -44,11 +72,18 @@ class DropSens(BaseDropout):
         if not training or self.dropout_prob == 0.0:
             return edge_index, edge_attr
 
-        if not hasattr(self, 'q'):
-            self.compute_q(edge_index)
-        
-        edge_mask = self.q[edge_index[1].to('cpu')] <= torch.rand(edge_index.size(1))
+        degrees = degree(edge_index[1]).int()
+        if not hasattr(self, 'mapper'):
+            self.init_mapper(edge_index)
+        elif not self.node_level_task:
+            self.update_mapper(degrees)
+
+        # degrees[edge_index[1]]: i -> d_i
+        # self.mapper[degrees[edge_index[1]]]: (i -> d_i) -> q_i
+        qs = self.mapper[degrees[edge_index[1]].to('cpu')]
+        edge_mask = qs <= torch.rand(edge_index.size(1))
         edge_mask = edge_mask.to(edge_index.device)
+
         edge_index = edge_index[:, edge_mask]
         edge_attr = edge_attr[edge_mask] if edge_attr is not None else None
 

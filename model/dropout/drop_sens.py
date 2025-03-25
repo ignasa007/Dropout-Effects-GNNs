@@ -1,11 +1,12 @@
 from typing import Optional
 from argparse import Namespace
+import warnings
 
 import numpy as np
 import sympy
 from sympy.abc import x
 import torch
-from torch_geometric.utils import degree
+from torch_geometric.utils import degree, contains_self_loops
 from model.dropout.base import BaseDropout
 
 
@@ -24,13 +25,17 @@ class DropSens(BaseDropout):
     def init_mapper(self, edge_index):
 
         # Assuming edge index does not have self loops
+        if contains_self_loops(edge_index):
+            warnings.warn('Degree computation in DropSens assumes absence of self-loops, \
+                but the edge_index received has them.')
         degrees = degree(edge_index[1]).int()       # Node index -> node degree
 
         if self.node_level_task:
             # If node level task, compute mapper *once*, only for the valid degrees, 
             # since they won't change in each run
-            ds = torch.unique(degrees).tolist()     # Sorted array
-            self.mapper = torch.nan * torch.ones(ds[-1]+1)
+            ds = torch.unique(degrees).tolist()             # Sorted array
+            self.mapper = torch.nan * torch.ones(ds[-1]+1)  # torch.nan where index is not in ds
+            self.mapper[ds] = self.dropout_prob             # Reset some of the dropping probabilities below
         else:
             # If graph level task, compute mapper for all d upto max(unique_degrees), 
             # because degrees will change in each run

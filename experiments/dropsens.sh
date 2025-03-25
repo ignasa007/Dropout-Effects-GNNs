@@ -1,13 +1,20 @@
 #!/bin/bash
 
-total_samples=20
 dataset=${1}
 gnn=${2}
 device_index=${3}
-
 dropout="DropSens"
-drop_ps=(0.2 0.5 0.8)
-info_loss_ratios=(0.8 0.9 0.95)
+if [ -z "${4}" ]; then 
+    drop_ps=("${4}")
+else 
+    drop_ps=(0.2 0.3 0.5 0.8)
+fi
+if [ -z "${5}" ]; then 
+    info_loss_ratios=("${5}")
+else 
+    info_loss_ratios=(0.5 0.8 0.9 0.95)
+fi
+total_samples="${6:-20}"
 
 hidden_size=64
 depth=4

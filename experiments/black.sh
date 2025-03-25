@@ -1,12 +1,20 @@
 !/bin/bash
 
-total_samples=20
 dataset=${1}
 gnn=${2}
 device_index=${3}
 
-dropouts=("NoDrop" "DropEdge" "Dropout" "DropMessage" "DropNode" "DropAgg" "DropGNN")
-drop_ps=$(seq 0.1 0.1 0.9)
+if [ -z "${4}" ]; then 
+    dropouts=("${4}")
+else 
+    dropouts=("NoDrop" "DropEdge" "Dropout" "DropMessage" "DropNode" "DropAgg" "DropGNN")
+fi
+if [ -z "${5}" ]; then 
+    drop_ps=("${5}")
+else 
+    drop_ps=$(seq 0.1 0.1 0.9)
+fi
+total_samples="${6:-20}"
 
 hidden_size=64
 depth=4

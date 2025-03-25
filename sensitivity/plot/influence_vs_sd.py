@@ -33,52 +33,48 @@ args = parser.parse_args()
 
 dataset = 'Cora'
 models = (
-    ('NoDrop', 'GCN'),
-    # ('NoDrop', 'ResGCN'),
-    ('DropEdge', 'GCN'),
-    ('Dropout', 'GCN'),
-    ('DropMessage', 'GCN'),
-    ('', ''),
-    ('DropNode', 'GCN'),
-    ('DropAgg', 'GCN'),
-    ('DropGNN', 'GCN'),
-    # ('SkipNode', 'GCN'),
-    # ('DropSens', 'GCN'),
+    ('NoDrop', 'GCN', args.drop_p),
+    ('DropEdge', 'GCN', args.drop_p),
+    # ('Dropout', 'GCN', args.drop_p),
+    # ('DropMessage', 'GCN', args.drop_p),
+    ('DropSens', 'GCN', 0.8),
+    ('DropNode', 'GCN', args.drop_p),
+    ('DropAgg', 'GCN', args.drop_p),
+    ('DropGNN', 'GCN', args.drop_p),
 )
-'''
-Difference between agg='sum' and agg='mean':
-agg='sum' followed by normalization using count_pairs treats each source node equally,
-    computing a weighted mean (over the target nodes, weighted by their in-degrees) of
-    average sensitivity at different distances.
-agg='mean' treats each target node equally, computing an unweighted mean of the
-    average sensitivity at different distances.
-'''
+
+# Difference between agg='sum' and agg='mean':
+# agg='sum' followed by normalization using count_pairs treats each source node equally,
+#   computing a weighted mean (over the target nodes, weighted by their in-degrees) of
+#   average sensitivity at different distances.
+# agg='mean' treats each target node equally, computing an unweighted mean of the
+#   average sensitivity at different distances.
 agg = 'mean'
 
 jac_norms_dir = './jac-norms'
 fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8)); ncol = 2
 MODEL_SAMPLES = 25
 
-for dropout, gnn in tqdm(models):
+for dropout, gnn, drop_p in tqdm(models):
 
     if not dropout or not dataset or not gnn:
         ax.plot(np.nan, np.nan, '-', color='none', label=' ')
         continue
 
     dataset_dir = f'{jac_norms_dir}/{dataset}'
-    P = 0.0 if dropout == 'NoDrop' else args.drop_p
+    P = 0.0 if dropout == 'NoDrop' else drop_p
 
-    '''Number of node-pairs at different distances
-    computed using all target nodes and their corresponding source nodes'''
+    # Number of node-pairs at different distances
+    #   computed using all target nodes and their corresponding source nodes
     count_pairs = torch.zeros(args.L+1)
-    '''Sum of influence of source nodes at different distances from the target'''
+    # Sum of influence of source nodes at different distances from the target
     sum_influence = torch.zeros(MODEL_SAMPLES, args.L+1)
 
     for i_dir in os.listdir(dataset_dir):
         
         i_dir = f'{dataset_dir}/{i_dir}/L={args.L}'
         model_dir = f'{i_dir}/{gnn}/{dropout}/P={P}'
-        '''Continue if no model samples exist'''
+        # Continue if no model samples exist
         if not os.path.isdir(model_dir) or not os.listdir(model_dir):
             continue
 
@@ -88,41 +84,35 @@ for dropout, gnn in tqdm(models):
         
         for sample in range(1, MODEL_SAMPLES+1):
             jac_norms = torch.load(f'{model_dir}/sample={sample}.pkl')
-            '''
-            Reasons for computing the influence right away, 
-                instead of eg. summing sensitivities over target nodes first:
-            1. Graph topology can affect the scale of sensitivity, and we would not
-                want to treat a well positioned node equal to a poorly positioned node.
-            2. Magnitude of model parameters can also affect the scale of sensitivities.
-            Essentially, we want scale invariance in order to quantify over-squashing as
-                sensitivity to distant nodes *after* controlling total sensitivity.
-            '''
+            # Reasons for computing the influence right away, 
+            #   instead of eg. summing sensitivities over target nodes first:
+            # 1. Graph topology can affect the scale of sensitivity, and we would not
+            #   want to treat a well positioned node equal to a poorly positioned node.
+            # 2. Magnitude of model parameters can also affect the scale of sensitivities.
+            # Essentially, we want scale invariance in order to quantify over-squashing as
+            #   sensitivity to distant nodes *after* controlling total sensitivity.
             if jac_norms.sum().item() > 0.:
                 influence_distribution = jac_norms / jac_norms.sum()
             else:
-                '''jac_norms.sum() == 0. in some cases with DropNode'''
+                # jac_norms.sum() == 0. in some cases with DropNode
                 influence_distribution = torch.zeros_like(jac_norms)
             y_sd = aggregate(influence_distribution, shortest_distances, x_sd, agg=agg)
-            '''
-            OBSERVATION: For non-edge-dropping methods, influence of neighbors can be less or even 
-                *more* than the self-influence because each neighbor contributes to updating the
-                target node's representations in each step, just like the target node itself.
-            Their contribution should be related to the L-step random walk transition probability,
-                P(s_L=i|s_0=j), which would obviously be low for source nodes beyond the neighbors.
-            With edge-dropping methods, the retention of the self-loop makes this probability higher
-                for self-transitions than for any cross-transitions.
-            '''
+            # OBSERVATION: For non-edge-dropping methods, influence of neighbors can be less or even 
+            #   *more* than the self-influence because each neighbor contributes to updating the
+            #   target node's representations in each step, just like the target node itself.
+            # Their contribution should be related to the L-step random walk transition probability,
+            #   P(s_L=i|s_0=j), which would obviously be low for source nodes beyond the neighbors.
+            # With edge-dropping methods, the retention of the self-loop makes this probability higher
+            #   for self-transitions than for any cross-transitions.
             sum_influence[sample-1, x_sd] += y_sd
 
-    '''Mean of influence of source nodes at different distances from the target'''
+    # Mean of influence of source nodes at different distances from the target
     mean_influence = sum_influence / count_pairs
 
-    '''Average over initialization and/or mask samples'''
+    # Average over initialization and/or mask samples
     std, mean = torch.std_mean(mean_influence, dim=0)
     x = torch.arange(args.L+1)
-    # ax.plot(x, mean, label=f'{gnn}, {dropout}({P})')
     ax.plot(x, mean, label=dropout)
-    # ax.fill_between(x, mean-std, mean+std, alpha=0.2)
 
 ax.set_xlabel('Shortest Distances', fontsize=18)
 ax.set_ylabel('Influence Distribution', fontsize=18)

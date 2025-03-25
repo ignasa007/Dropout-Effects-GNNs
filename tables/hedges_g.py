@@ -79,21 +79,21 @@ def get_best(dataset, gnn, dropout):
     return best_drop_p, best_samples
 
 def color_effect_size(value):
-
     if value < -0.65:      # Between -inf and -0.65, includes -0.8
-        return '\\cellcolor{\\negative!80} '
+        out = '\\cellcolor{\\negative!80}'
     elif value < -0.35:    # Between -0.65 and -0.35, includes -0.5
-        return '\\cellcolor{\\negative!50} '
+        out = '\\cellcolor{\\negative!50}'
     elif value < -0.10:    # Between -0.35 and -0.10, includes -0.2
-        return '\\cellcolor{\\negative!20} '
+        out = '\\cellcolor{\\negative!20}'
     elif value < +0.10:    # Between -0.10 and +0.10, includes 0.0
-        return ''
+        out = ''
     elif value < +0.35:    # Between +0.10 and +0.35, includes +0.2
-        return '\\cellcolor{\\positive!20} '
+        out = '\\cellcolor{\\positive!20}'
     elif value < +0.65:    # Between +0.35 and +0.65, includes +0.5
-        return '\\cellcolor{\\positive!50} '
+        out = '\\cellcolor{\\positive!50} '
     else:                  # Between +0.65 and +inf, includes +0.8
-        return '\\cellcolor{\\positive!80} '
+        out = '\\cellcolor{\\positive!80}'
+    return out+' ' if out else out
 
 data = dict()
 

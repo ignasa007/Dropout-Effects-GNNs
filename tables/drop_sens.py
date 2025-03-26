@@ -16,7 +16,7 @@ args = parser.parse_args()
 if args.node:
     datasets = ('Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE')
 elif args.graph:
-    datasets = ('Proteins', 'Mutag', 'Enzymes')
+    datasets = ('Proteins', 'Mutag', 'Enzymes', 'Reddit', 'IMDb', 'Collab')
 else:
     raise ValueError('At least one of args.node and args.graph needs to be true.')
 gnns = ('GCN', 'GAT')
@@ -81,10 +81,12 @@ def get_best(dataset, gnn, dropout):
     for drop_p in drop_ps:
         for info_loss_ratio in info_loss_ratios:
             samples = get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio)
-            mean = np.mean(samples) if len(samples) >= 10 else np.nan
+            # Use at least 10 samples and at most 20 samples for computing the best config
+            mean = np.mean(samples[:20]) if len(samples) >= 10 else np.nan
             if mean > best_mean:
                 best_mean, best_samples = mean, samples
     
+    # Return all samples (more than 20 for the best config)
     return best_samples
 
 def is_normal(samples):
@@ -140,21 +142,25 @@ for dataset in tqdm(datasets):
             if best_drop_samples is None:
                 continue
             best_drop_mean, best_drop_std = np.mean(best_drop_samples), np.std(best_drop_samples, ddof=1)
-            # cell_value = f'{100*(best_drop_mean-no_drop_mean):.3f}'
-            # if cell_value[0].isdigit():
-            #     cell_value = f'+{cell_value}'
-            # statistic, pvalue = compare_samples(no_drop_samples, best_drop_samples)
-            # if pvalue > 0.1:
-            #     cell_value = f'\\cellcolor{{\\negative!{100*(pvalue-0.1)/0.9:.3f}}} ${cell_value}$'
-            # else:
-            #     cell_value = f'\\cellcolor{{\\positive!{100*(0.1-pvalue)/0.1:.3f}}} ${cell_value}$'
-            # data[(dropout, gnn, dataset)] = cell_value
-            cohens_d = (best_drop_mean-no_drop_mean) / np.sqrt((best_drop_std**2+no_drop_std**2)/2)
-            hedges_correction = 1 - 3 / (4*(len(best_drop_samples)+len(no_drop_samples))-9)
-            value = f'{hedges_correction*cohens_d:.3f}'
-            if value[0].isdigit():
-                value = f'+{value}'
-            data[(dropout, gnn, dataset)] = f'{color_effect_size(float(value))}{value}'
+            cell_value = f'{100*(best_drop_mean-no_drop_mean):.3f}'
+            if cell_value[0].isdigit():
+                cell_value = f'+{cell_value}'
+            statistic, pvalue = compare_samples(no_drop_samples, best_drop_samples)
+            if pvalue > 0.1:
+                cell_value = f'\\cellcolor{{\\negative!{100*(pvalue-0.1)/0.9:.3f}}} ${cell_value}$'
+            else:
+                cell_value = f'\\cellcolor{{\\positive!{100*(0.1-pvalue)/0.1:.3f}}} ${cell_value}$'
+            data[(dropout, gnn, dataset)] = cell_value
+            # s_pool = np.sqrt((
+            #     (len(best_drop_samples)-1) * best_drop_std**2 + 
+            #     (len(no_drop_samples)-1) * no_drop_std**2
+            # ) / (len(best_drop_samples) + len(no_drop_samples) - 2))
+            # cohens_d = (best_drop_mean-no_drop_mean) / s_pool
+            # hedges_correction = 1 - 3 / (4*(len(best_drop_samples)+len(no_drop_samples))-9)
+            # value = f'{hedges_correction*cohens_d:.3f}'
+            # if value[0].isdigit():
+            #     value = f'+{value}'
+            # data[(dropout, gnn, dataset)] = f'{color_effect_size(float(value))}{value}'
 
 for dropout in dropouts:
     print(f'\\multirow{{2}}{{*}}{{{dropout}}}', end='')

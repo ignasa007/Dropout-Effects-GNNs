@@ -64,19 +64,24 @@ def get_samples(dataset, gnn, dropout, drop_p):
         sample = test[metric][np.argmax(val[metric])]
         samples.append(sample)
 
+    if len(samples) < 20:
+        print(dataset, gnn, dropout, drop_p)
+
     return samples
 
 def get_best(dataset, gnn, dropout):
 
-    best_mean, best_drop_p, best_samples = float('-inf'), None, None
+    best_mean, best_samples = float('-inf'), None
 
     for drop_p in drop_ps:
         samples = get_samples(dataset, gnn, dropout, drop_p)
-        mean = np.mean(samples) if len(samples) >= 10 else np.nan
+        # Use at least 10 samples and at most 20 samples for computing the best config
+        mean = np.mean(samples[:20]) if len(samples) >= 10 else np.nan
         if mean > best_mean:
-            best_mean, best_drop_p, best_samples = mean, drop_p, samples
+            best_mean, best_samples = mean, samples
     
-    return best_drop_p, best_samples
+    # Return all samples (more than 20 for the best config)
+    return best_samples
 
 def is_normal(samples):
 
@@ -108,7 +113,7 @@ for dataset in tqdm(datasets):
         no_drop_samples = get_samples(dataset, gnn, 'NoDrop', 0.0)
         no_drop_mean, no_drop_std = np.mean(no_drop_samples), np.std(no_drop_samples, ddof=1)
         for dropout in dropouts:
-            best_drop_p, best_drop_samples = get_best(dataset, gnn, dropout)
+            best_drop_samples = get_best(dataset, gnn, dropout)
             if best_drop_samples is None:
                 continue
             best_drop_mean, best_drop_std = np.mean(best_drop_samples), np.std(best_drop_samples, ddof=1)

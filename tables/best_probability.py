@@ -64,6 +64,9 @@ def get_samples(dataset, gnn, dropout, drop_p):
         sample = test[metric][np.argmax(val[metric])]
         samples.append(sample)
 
+    if len(samples) < 20:
+        print(dataset, gnn, dropout, drop_p)
+
     return samples
 
 def find_best_drop_p(dataset, gnn, dropout):
@@ -72,7 +75,8 @@ def find_best_drop_p(dataset, gnn, dropout):
 
     for drop_p in drop_ps:
         samples = get_samples(dataset, gnn, dropout, drop_p)
-        mean = np.mean(samples)
+        # Use at least 10 samples and at most 20 samples for computing the best config
+        mean = np.mean(samples[:20]) if len(samples) >= 10 else np.nan
         if mean > best_mean:
             best_mean, best_drop_p = mean, drop_p
     

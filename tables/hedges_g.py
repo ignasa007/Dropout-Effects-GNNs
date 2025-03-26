@@ -64,6 +64,9 @@ def get_samples(dataset, gnn, dropout, drop_p):
         sample = test[metric][np.argmax(val[metric])]
         samples.append(sample)
 
+    if len(samples) < 20:
+        print(dataset, gnn, dropout, drop_p)
+
     return samples
 
 def get_best(dataset, gnn, dropout):
@@ -72,10 +75,12 @@ def get_best(dataset, gnn, dropout):
 
     for drop_p in drop_ps:
         samples = get_samples(dataset, gnn, dropout, drop_p)
-        mean = np.mean(samples) if len(samples) >= 10 else np.nan
+        # Use at least 10 samples and at most 20 samples for computing the best config
+        mean = np.mean(samples[:20]) if len(samples) >= 10 else np.nan
         if mean > best_mean:
             best_mean, best_drop_p, best_samples = mean, drop_p, samples
     
+    # Return all samples (more than 20 for the best config)
     return best_drop_p, best_samples
 
 def color_effect_size(value):
@@ -106,8 +111,11 @@ for dataset in tqdm(datasets):
             if best_drop_samples is None:
                 continue
             best_drop_mean, best_drop_std = np.mean(best_drop_samples), np.std(best_drop_samples, ddof=1)
-            # Assuming that the sample sizes are the same
-            cohens_d = (best_drop_mean-no_drop_mean) / np.sqrt((best_drop_std**2+no_drop_std**2)/2)
+            s_pool = np.sqrt((
+                (len(best_drop_samples)-1) * best_drop_std**2 + 
+                (len(no_drop_samples)-1) * no_drop_std**2
+            ) / (len(best_drop_samples) + len(no_drop_samples) - 2))
+            cohens_d = (best_drop_mean-no_drop_mean) / s_pool
             # Small sample size correction
             hedges_correction = 1 - 3 / (4*(len(best_drop_samples)+len(no_drop_samples))-9)
             value = f'{hedges_correction*cohens_d:.3f}'

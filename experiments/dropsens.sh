@@ -4,12 +4,12 @@ dataset=${1}
 gnn=${2}
 device_index=${3}
 dropout="DropSens"
-if [ -z "${4}" ]; then 
+if [ ! -z "${4+x}" ]; then    # ${4} is set
     drop_ps=("${4}")
-else 
+else
     drop_ps=(0.2 0.3 0.5 0.8)
 fi
-if [ -z "${5}" ]; then 
+if [ ! -z "${5+x}" ]; then
     info_loss_ratios=("${5}")
 else 
     info_loss_ratios=(0.5 0.8 0.9 0.95)

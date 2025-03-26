@@ -1,15 +1,15 @@
-!/bin/bash
+#!/bin/bash
 
 dataset=${1}
 gnn=${2}
 device_index=${3}
 
-if [ -z "${4}" ]; then 
+if [ ! -z "${4+x}" ]; then 
     dropouts=("${4}")
 else 
     dropouts=("NoDrop" "DropEdge" "Dropout" "DropMessage" "DropNode" "DropAgg" "DropGNN")
 fi
-if [ -z "${5}" ]; then 
+if [ ! -z "${5+x}" ]; then 
     drop_ps=("${5}")
 else 
     drop_ps=$(seq 0.1 0.1 0.9)

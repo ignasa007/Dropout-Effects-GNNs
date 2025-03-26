@@ -132,6 +132,6 @@ for dropout in dropouts:
             to_print.append(data.get((dropout, gnn, dataset), ''))
         print(f"{' & '.join(to_print)} \\\\ ", end='')
         if gnn != gnns[-1]:
-            print('\\cline{2-8}')
+            print('\f"\\hhline{{|~|{'-'*7}|}}"')
         else:
             print('\\hline')

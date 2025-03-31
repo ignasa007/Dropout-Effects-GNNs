@@ -1,16 +1,21 @@
+''''
+# Staying consistent with Karhadkar et al. (2022)
+# https://github.com/kedar2/FoSR/blob/1a7360c2c77c42624bdc7ffef1490a2eb0a8afd0/models/graph_model.py#L77
+'''
+
 from argparse import Namespace
 from typing import Optional
 
-from torch import Tensor, empty
-from torch.nn import Parameter, Module
+from torch import Tensor
+from torch.nn import Module, Sequential, Linear
 from torch_geometric.typing import Adj
 from torch_geometric.utils import remove_self_loops 
+from torch_geometric.nn.conv import GINConv
 
 from model.dropout.base import BaseDropout
-from model.message_passing.gcn import GCNLayer
 
 
-class GINLayer(GCNLayer):
+class GINLayer(GINConv):
 
     def __init__(
         self,
@@ -20,54 +25,56 @@ class GINLayer(GCNLayer):
         activation: Module,
         add_self_loops: bool = False,   # ignored
         normalize: bool = False,        # ignored
-        bias: bool = True,
+        bias: bool = False,
         others: Optional[Namespace] = None,
     ):
-
-        super(GINLayer, self).__init__(
-            in_channels=in_channels,
-            out_channels=out_channels,
-            drop_strategy=drop_strategy,
-            activation=activation,
-            add_self_loops=False,
-            normalize=False,
-            bias=bias,
-            others=others,
+        
+        nn = Sequential(
+            Linear(in_channels, out_channels, bias=bias),
+            activation,
+            Linear(out_channels, out_channels, bias=bias),
         )
+        super(GINLayer, self).__init__(nn=nn)
 
-        if others.eps is None:
-            self.initial_eps = 0.
-            self.eps = Parameter(empty(1))
-        else:
-            self.initial_eps = others.eps
-            self.register_buffer('eps', empty(1))
-        self.reset_eps()
+        self.activation = activation
+        self.drop_strategy = drop_strategy
 
-    def reset_parameters(self):
+    def treat_adj_mat(self, edge_index):
         
-        # Messy logic: need to intialize module before setting parameter `eps`
-        # module is initialized in `GCNConv.__init__()`, which also resets parameters
-        # but eps is not initialized before that, so cannot reset `eps` till then
-        
-        super(GINLayer, self).reset_parameters()
-        if hasattr(self, 'eps'): self.reset_eps()
-        
-    def reset_eps(self):
+        edge_index, _ = remove_self_loops(edge_index)
+        edge_index, _ = self.drop_strategy.apply_adj_mat(edge_index, None, self.training)
 
-        self.eps.data.fill_(self.initial_eps)
+        return edge_index
+
+    def message_passing(self, edge_index, x):
+
+        out = self.propagate(edge_index, x=(x, x))
+        
+        return out
+    
+    def feature_transformation(self, out):
+
+        out = self.nn(out)
+        out = self.activation(out)
+
+        return out
     
     def forward(self, x: Tensor, edge_index: Adj):
 
-        # FEATURE TRANSFORMATION
-        x = self.feature_transformation(x)
-        # TREAT ADJACENCY MATRIX -- no self loops, no weight normalization => edge_weight = None
-        edge_index, edge_weight = self.treat_adj_mat(
-            remove_self_loops(edge_index)[0], num_nodes=x.size(0), dtype=x.dtype
-        )
+        # DROPOUT
+        x = self.drop_strategy.apply_feature_mat(x, self.training)
+        # TREAT ADJACENCY MATRIX
+        edge_index = self.treat_adj_mat(edge_index)
         # MESSAGE PASSING
-        out = self.message_passing(edge_index, x, edge_weight)
-        out = out + (1+self.eps) * x
-        # APPLY ACTIVATION
-        out = self.nonlinearity(out)
+        out = self.message_passing(edge_index, x=x) + (1+self.eps) * x
+        # APPLY TRANSFORMATION
+        out = self.feature_transformation(out)
 
         return out
+
+    def message(self, x_j: Tensor):
+
+        # drop from message matrix -- drop message
+        x_j = self.drop_strategy.apply_message_mat(x_j, self.training)
+
+        return x_j

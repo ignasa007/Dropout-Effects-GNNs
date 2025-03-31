@@ -20,7 +20,7 @@ elif args.graph:
 else:
     raise ValueError('At least one of args.node and args.graph needs to be true.')
 gnns = ('GCN', 'GAT')
-dropouts = ('DropSens',)
+dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessage', 'DropSens')
 
 '''
 for name in ('PROTEINS', 'MUTAG', 'ENZYMES', 'REDDIT-BINARY', 'IMDB-BINARY', 'COLLAB'): 
@@ -43,12 +43,12 @@ cutoffs = {
 }
 
 metric = 'Accuracy'
-drop_ps = (0.2, 0.3, 0.5, 0.8)
+drop_ps = np.round(np.arange(0.1, 1, 0.1), decimals=1)
 info_loss_ratios = (0.5, 0.8, 0.9, 0.95)
 exp_dir = './results/{dropout}/{dataset}/{gnn}/L=4/P={drop_p}/C={info_loss_ratio}'
 
 
-def get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio):
+def get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio=None):
 
     exp_dir_format = exp_dir.format(dropout=dropout, dataset=dataset, gnn=gnn, drop_p=drop_p, info_loss_ratio=info_loss_ratio)
     if info_loss_ratio is None:
@@ -79,7 +79,7 @@ def get_best(dataset, gnn, dropout):
     best_mean, best_samples = float('-inf'), None
 
     for drop_p in drop_ps:
-        for info_loss_ratio in info_loss_ratios:
+        for info_loss_ratio in (info_loss_ratios if dropout == 'DropSens' else (None,)):
             samples = get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio)
             # Use at least 10 samples and at most 20 samples for computing the best config
             mean = np.mean(samples[:20]) if len(samples) >= 10 else np.nan
@@ -94,17 +94,17 @@ def is_normal(samples):
     # Failed to reject the null hypothesis of normal distribution of data at 90% confidence
     return stats.shapiro(samples)[0] > 0.1
 
-def compare_samples(no_drop_samples, best_drop_samples):
+def compare_samples(base_drop_samples, best_drop_samples):
 
     '''
     Testing the hypothesis that NoDrop performs worse than the given Dropout method
         under the null hypothesis of equal means.
     '''
 
-    assert is_normal(no_drop_samples) and is_normal(best_drop_samples)
+    assert is_normal(base_drop_samples) and is_normal(best_drop_samples)
 
     statistic, pvalue = stats.ttest_ind(
-        no_drop_samples,
+        base_drop_samples,
         best_drop_samples,
         equal_var=False,    # Dropout samples should have a higher variance
         alternative='less'  # The mean of NoDrop samples is less than the mean of BestDrop samples
@@ -134,36 +134,42 @@ def color_effect_size(value):
 data = dict()
 
 for dataset in tqdm(datasets):    
+    
     for gnn in gnns:
-        no_drop_samples = get_samples(dataset, gnn, 'NoDrop', 0.0, None)
-        no_drop_mean, no_drop_std = np.mean(no_drop_samples), np.std(no_drop_samples, ddof=1)
+        
+        base_drop_samples = get_samples(dataset, gnn, 'NoDrop', 0.0)
+        base_drop_mean, base_drop_std = np.mean(base_drop_samples), np.std(base_drop_samples, ddof=1)
+        
         for dropout in dropouts:
+
             best_drop_samples = get_best(dataset, gnn, dropout)
             if best_drop_samples is None:
                 continue
             best_drop_mean, best_drop_std = np.mean(best_drop_samples), np.std(best_drop_samples, ddof=1)
-            cell_value = f'{100*(best_drop_mean-no_drop_mean):.3f}'
+            
+            cell_value = f'{100*(best_drop_mean-base_drop_mean):.3f}'
             if cell_value[0].isdigit():
                 cell_value = f'+{cell_value}'
-            statistic, pvalue = compare_samples(no_drop_samples, best_drop_samples)
+            statistic, pvalue = compare_samples(base_drop_samples, best_drop_samples)
             if pvalue > 0.1:
                 cell_value = f'\\cellcolor{{\\negative!{100*(pvalue-0.1)/0.9:.3f}}} ${cell_value}$'
             else:
                 cell_value = f'\\cellcolor{{\\positive!{100*(0.1-pvalue)/0.1:.3f}}} ${cell_value}$'
             data[(dropout, gnn, dataset)] = cell_value
+            
             # s_pool = np.sqrt((
             #     (len(best_drop_samples)-1) * best_drop_std**2 + 
-            #     (len(no_drop_samples)-1) * no_drop_std**2
-            # ) / (len(best_drop_samples) + len(no_drop_samples) - 2))
-            # cohens_d = (best_drop_mean-no_drop_mean) / s_pool
-            # hedges_correction = 1 - 3 / (4*(len(best_drop_samples)+len(no_drop_samples))-9)
+            #     (len(base_drop_samples)-1) * base_drop_std**2
+            # ) / (len(best_drop_samples) + len(base_drop_samples) - 2))
+            # cohens_d = (best_drop_mean-base_drop_mean) / s_pool
+            # hedges_correction = 1 - 3 / (4*(len(best_drop_samples)+len(base_drop_samples))-9)
             # value = f'{hedges_correction*cohens_d:.3f}'
             # if value[0].isdigit():
             #     value = f'+{value}'
             # data[(dropout, gnn, dataset)] = f'{color_effect_size(float(value))}{value}'
 
 for dropout in dropouts:
-    print(f'\\multirow{{2}}{{*}}{{{dropout}}}', end='')
+    print(f"\\multirow{{2}}{{*}}{{{dropout}}}", end='')
     for gnn in gnns:
         print(f' & {gnn} & ', end='')
         to_print = list()
@@ -171,6 +177,6 @@ for dropout in dropouts:
             to_print.append(data.get((dropout, gnn, dataset), ''))
         print(f"{' & '.join(to_print)} \\\\ ", end='')
         if gnn != gnns[-1]:
-            print('\f"\\hhline{{|~|{'-'*7}|}}"')
+            print(f"\\hhline{{|~|{'-'*7}|}}")
         else:
             print('\\hline')

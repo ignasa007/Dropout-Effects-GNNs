@@ -53,7 +53,7 @@ fs1.mv(path1, path2, recursive=recursive)
 
 To train a model, execute
 ```bash
-python -B main.py
+python -m main
     --dataset ${dataset}
     --gnn ${gnn}
     --gnn_layer_sizes ${width}*${depth}

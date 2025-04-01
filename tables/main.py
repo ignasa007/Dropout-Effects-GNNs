@@ -19,7 +19,7 @@ assert sum((args.node, args.graph)) == 1, 'Exactly one must be true.'
 assert sum((args.significance, args.effect_size, args.best_prob)) == 1, 'Exactly one must be true.'
 
 if args.significance:
-    from tables.significance import cell_value
+    from tables.p_value import cell_value
 elif args.effect_size:
     from tables.effect_size import cell_value
 elif args.best_prob:
@@ -28,8 +28,10 @@ elif args.best_prob:
 if args.node:
     datasets = ('Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE')
 elif args.graph:
-    datasets = ('Proteins', 'Mutag', 'Enzymes', 'Reddit', 'IMDb', 'Collab')
-gnns = ('GCN', 'GAT')
+    # datasets = ('Proteins', 'Mutag', 'Enzymes', 'Reddit', 'IMDb', 'Collab')
+    datasets = ('Collab',)
+# gnns = ('GCN', 'GAT')
+gnns = ('GAT',)
 dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessage', 'DropSens')
 
 '''
@@ -77,7 +79,7 @@ def get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio=None):
             # print(f'Failed to learn: {exp_dir_format}/{timestamp}, {np.max(train[metric])} < {cutoffs[dataset]}')
             # pass
         sample = test[metric][np.argmax(val[metric])]
-        samples.append(sample)
+        samples.append(round(sample, 12))
 
     if len(samples) < 20:
         print(dataset, gnn, drop_p, info_loss_ratio)

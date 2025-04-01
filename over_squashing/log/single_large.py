@@ -11,7 +11,7 @@ from utils.config import parse_arguments
 from dataset import get_dataset
 from model import Model as BaseModel
 from model.message_passing.pretreatment import ModelPretreatment as BaseModelPretreatment
-from sensitivity.utils import get_jacobian_norms
+from over_squashing.utils import get_jacobian_norms
 
 
 NODE_SAMPLES = 25

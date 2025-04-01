@@ -12,8 +12,8 @@ class BaseDropout(nn.Module):
         if not isinstance(dropout_prob, (float, int)):
             raise TypeError(f'Parameter `dropout_prob` must be of type `float` or `int` (got {type(dropout_prob)}).')
         
-        if not (0.0 < dropout_prob < 1.0):
-            raise ValueError(f'Parameter `dropout_prob` must be between 0 and 1 (got {dropout_prob}).')
+        if not (0.0 <= dropout_prob < 1.0):
+            raise ValueError(f'Parameter `dropout_prob` must be in [0, 1) (got {dropout_prob}).')
         
         self.dropout_prob = dropout_prob
 

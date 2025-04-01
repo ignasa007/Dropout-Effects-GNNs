@@ -7,23 +7,22 @@ import numpy as np
 import torch
 import matplotlib.pyplot as plt
 
-from sensitivity.utils import aggregate
+from over_squashing.utils import aggregate
 
 parser = argparse.ArgumentParser()
+parser.add_argument('--dataset', type=str, default='Cora')
 parser.add_argument('--L', type=int, default=6)
 parser.add_argument('--drop_p', type=float, default=0.5)
 args = parser.parse_args()
 
-dataset = 'Cora'
 models = (
-    ('NoDrop', 'GCN', args.drop_p),
-    ('DropEdge', 'GCN', args.drop_p),
-    # ('Dropout', 'GCN', args.drop_p),
-    # ('DropMessage', 'GCN', args.drop_p),
-    ('DropSens', 'GCN', 0.8),
-    ('DropNode', 'GCN', args.drop_p),
-    ('DropAgg', 'GCN', args.drop_p),
-    ('DropGNN', 'GCN', args.drop_p),
+    ('NoDrop', 'GCN'),
+    ('DropEdge', 'GCN'),
+    ('Dropout', 'GCN'),
+    ('DropMessage', 'GCN'),
+    ('DropNode', 'GCN'),
+    ('DropAgg', 'GCN'),
+    ('DropGNN', 'GCN'),
 )
 # Mean aggregation (instead of sum) because each source-target pair is not equal.
 # Rather, sensitivity to a source depends on the topolgy from the perspective of the target.
@@ -33,14 +32,14 @@ jac_norms_dir = './jac-norms'
 fig, ax = plt.subplots(1, 1, figsize=(6.4, 4.8)); ncol = 2
 MODEL_SAMPLES = 25
 
-for dropout, gnn, drop_p in tqdm(models):
+for dropout, gnn in tqdm(models):
 
-    if not dropout or not dataset or not gnn:
+    if not dropout or not args.dataset or not gnn:
         ax.plot(np.nan, np.nan, '-', color='none', label=' ')
         continue
 
-    dataset_dir = f'{jac_norms_dir}/{dataset}'
-    P = 0.0 if dropout == 'NoDrop' else drop_p
+    dataset_dir = f'{jac_norms_dir}/{args.dataset}'
+    P = 0.0 if dropout == 'NoDrop' else args.drop_p
 
     count_pairs = torch.zeros(args.L+1)
     sum_norms = torch.zeros(MODEL_SAMPLES, args.L+1)
@@ -79,6 +78,6 @@ handles, labels = ax.get_legend_handles_labels()
 fig.legend(handles, labels, loc='lower left', fontsize=15, ncol=ncol, bbox_to_anchor = (0.132, 0.135))
 fig.tight_layout()
 
-fn = f'./assets/sensitivity.png'
+fn = f'./assets/sensitivity/{args.dataset}.png'
 os.makedirs(os.path.dirname(fn), exist_ok=True)
 plt.savefig(fn, bbox_inches='tight')

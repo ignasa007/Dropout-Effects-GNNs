@@ -25,6 +25,7 @@ n_epochs=300
 
 for dropout in "${dropouts[@]}"; do
     for drop_p in $( [[ "$dropout" == "NoDrop" ]] && echo "0.0" || echo "${drop_ps[@]}" ); do
+        # config_dir="./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${drop_p}"
         config_dir="./results/${dropout}/${dataset}/${gnn}/L=${depth}/P=${drop_p}"
         num_samples=$(find ${config_dir} -mindepth 1 -type d 2>/dev/null | wc -l)
         while [ ${num_samples} -lt ${total_samples} ]; do

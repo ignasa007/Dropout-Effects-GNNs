@@ -102,4 +102,4 @@ ax.grid()
 # ax.legend()
 
 fig.tight_layout()
-plt.savefig('errors-diff.png')
+plt.savefig('./assets/DropSens/errors-diff.png')

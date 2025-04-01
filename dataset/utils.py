@@ -2,20 +2,15 @@ import torch
 from torch_geometric.data import InMemoryDataset
 from torch_geometric.loader import DataLoader
 
-from dataset.constants import Splits, batch_size
+from dataset.constants import Splits
 
 
 class CustomDataset(InMemoryDataset):
 
     def __init__(self, data_list):
+    
         super(CustomDataset, self).__init__()
         self.data, self.slices = self.collate(data_list)
-    
-    def __len__(self):
-        return len(self.slices)
-    
-    def __getitem__(self, index):
-        return self.get(index)
 
 
 def split_dataset(dataset, train_split=Splits.train_split, val_split=Splits.val_split, test_split=None):

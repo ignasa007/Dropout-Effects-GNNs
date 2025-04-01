@@ -9,6 +9,7 @@ device_index=${2}
 dropouts=("NoDrop" "DropEdge" "Dropout" "DropMessage")
 drop_ps=(0.2 0.5)
 distances=$(seq 0.0 ${step} 1.0)
+samples=$(seq 1 1 ${total_samples}) 
 
 hidden_size=16
 depth=11
@@ -18,10 +19,10 @@ attention_heads=2
 learning_rate=2e-3
 weight_decay=1e-4
 schedule_lr=true
-n_epochs=250
+n_epochs=200
 
 python -m dataset.synthetic_zinc \
-    --step ${step}
+    --step ${step};
 
 python -m utils.gen_model_samples \
     --dataset ${dataset} \
@@ -29,13 +30,13 @@ python -m utils.gen_model_samples \
     --gnn_layer_sizes ${hidden_size}*${depth} \
     --pooler ${pooler} \
     --num_samples ${total_samples} \
-    --exp_dir null
+    --exp_dir null;
 
 for dropout in "${dropouts[@]}"; do
     for drop_p in $( [[ "$dropout" == "NoDrop" ]] && echo "0.0" || echo "${drop_ps[@]}" ); do
         for distance in ${distances}; do
-            for sample in $(seq 1 1 ${total_samples}); do
-                exp_dir="./results/${dropout}/${dataset}/${gnn}/P=${drop_p}/distance=${distance}/sample=${sample}"
+            for sample in ${samples}; do
+                exp_dir="./results/${dataset}/distance=${distance}/${gnn}/L=${depth}/sample=${sample}/${dropout}/P=${drop_p}/"
                 if [ -f "${exp_dir}/logs" ]; then
                     continue
                 fi

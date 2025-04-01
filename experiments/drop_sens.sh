@@ -26,6 +26,7 @@ n_epochs=300
 
 for drop_p in "${drop_ps[@]}"; do
     for info_loss_ratio in "${info_loss_ratios[@]}"; do
+        # config_dir="./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${drop_p}/C=${info_loss_ratio}"
         config_dir="./results/${dropout}/${dataset}/${gnn}/L=${depth}/P=${drop_p}/C=${info_loss_ratio}"
         num_samples=$(find ${config_dir} -mindepth 1 -type d 2>/dev/null | wc -l)
         while [ ${num_samples} -lt ${total_samples} ]; do

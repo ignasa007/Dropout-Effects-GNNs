@@ -1,5 +1,6 @@
 import warnings; warnings.filterwarnings('ignore')
 import os
+import argparse
 
 import numpy as np
 import torch
@@ -8,11 +9,19 @@ from torch_geometric.utils import degree, remove_self_loops, add_remaining_self_
 from torch_geometric.utils.num_nodes import maybe_num_nodes
 import matplotlib.pyplot as plt
 
-from sensitivity.utils import to_adj_mat, compute_shortest_distances, aggregate
+from over_squashing.utils import to_adj_mat, compute_shortest_distances, aggregate
+from dataset import get_dataset
 
-L = 6; ls = range(L+1)
+parser = argparse.ArgumentParser()
+parser.add_argument('--dataset', type=str, default='Cora')
+parser.add_argument('--device_index', type=int, default=None)
+args = parser.parse_args()
+
+DEVICE = torch.device(f'cuda:{args.device_index}' if torch.cuda.is_available() and args.device_index is not None else 'cpu')
+dataset = get_dataset(args.dataset, config=None, others=None, device=DEVICE)
+
 DROPEDGE_SAMPLES = 20
-dataset = Planetoid(root='./data/Planetoid', name='Cora')
+L = 6; ls = range(L+1)
 ps = np.arange(0, 1, 0.1)
 
 edge_index = remove_self_loops(dataset.edge_index)[0]
@@ -59,6 +68,6 @@ axl.grid()
 axl.legend(loc='lower left', bbox_to_anchor=(0.05, 0.05), fontsize=18)
 
 fig.tight_layout()
-fn = f'./assets/linear-gcn/symmetric.png'
+fn = f'./assets/linear-gcn/symmetric/{args.dataset}.png'
 os.makedirs(os.path.dirname(fn), exist_ok=True)
 plt.savefig(fn, bbox_inches='tight')

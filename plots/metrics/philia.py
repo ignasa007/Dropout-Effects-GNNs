@@ -14,7 +14,7 @@ parser.add_argument('--gnn', type=str, default='GCN', choices=['GCN', 'GAT'])
 parser.add_argument('--dropout', type=str, default='DropEdge')
 args = parser.parse_args()
 
-homo_data = ('Cora', 'CiteSeer')
+homo_data = ('Cora', 'CiteSeer', 'PubMed')
 hetero_data = ('Chameleon', 'Squirrel', 'TwitchDE')
 homo_cutoffs = (0.3021, 0.2107)
 hetero_cutoffs = (0.2288, 0.1203, 0.6045)

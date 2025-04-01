@@ -6,7 +6,7 @@ import torch
 
 from dataset import get_dataset
 from utils.config import parse_arguments
-from sensitivity.utils import compute_shortest_distances, Model, get_jacobian_norms
+from over_squashing.utils import compute_shortest_distances, Model, get_jacobian_norms
 
 
 GRAPH_SAMPLES = 100

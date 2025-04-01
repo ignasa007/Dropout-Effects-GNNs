@@ -45,6 +45,8 @@ class BaseHead(Module):
         # the output layer does not use any activation
         self.ffn = Sequential(*module_list[:-1])
 
+        # No need to reset_parameters here because Linear layer initialization does it
+
     def reset_parameters(self):
         
         for linear_layer in self.ffn:

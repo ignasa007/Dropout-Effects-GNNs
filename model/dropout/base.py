@@ -12,7 +12,7 @@ class BaseDropout(nn.Module):
         if not isinstance(dropout_prob, (float, int)):
             raise TypeError(f'Parameter `dropout_prob` must be of type `float` or `int` (got {type(dropout_prob)}).')
         
-        if dropout_prob < 0.0 or dropout_prob > 1.0:
+        if not (0.0 < dropout_prob < 1.0):
             raise ValueError(f'Parameter `dropout_prob` must be between 0 and 1 (got {dropout_prob}).')
         
         self.dropout_prob = dropout_prob
@@ -22,6 +22,7 @@ class BaseDropout(nn.Module):
         '''
         Dropout methods applied to the feature matrix, eg.
             1. Dropout
+            2. DropNode
 
         Args:
             x (Tensor): feature matrix, eg. shape (|V|, H_{i})
@@ -34,7 +35,8 @@ class BaseDropout(nn.Module):
         '''
         Dropout methods applied to the adjacency matrix, eg.
             1. DropEdge
-            2. DropNode
+            2. DropAgg
+            3. DropGNN
 
         Args:
             edge_index (Adj): adjacency matrix, eg. shape (2, |E|)

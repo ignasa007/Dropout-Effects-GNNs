@@ -102,4 +102,4 @@ ax.grid()
 # ax.legend()
 
 fig.tight_layout()
-plt.savefig('tmp.png')
+plt.savefig('errors-diff.png')

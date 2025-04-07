@@ -13,7 +13,7 @@ def is_connected(edge_index):
 def to_adj_mat(edge_index, num_nodes=None, undirected=False):
     
     num_nodes = num_nodes if isinstance(num_nodes, int) else maybe_num_nodes(edge_index)
-    A = torch.full((num_nodes, num_nodes), 0.)
+    A = torch.full((num_nodes, num_nodes), 0., device=edge_index.device)
 
     if undirected:
         edge_index = to_undirected(edge_index, num_nodes=num_nodes)

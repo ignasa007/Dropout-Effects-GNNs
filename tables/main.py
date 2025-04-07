@@ -10,15 +10,15 @@ from utils.parse_logs import parse_metrics
 parser = argparse.ArgumentParser()
 parser.add_argument('--node', action='store_true')
 parser.add_argument('--graph', action='store_true')
-parser.add_argument('--significance', action='store_true')
+parser.add_argument('--p_value', action='store_true')
 parser.add_argument('--effect_size', action='store_true')
 parser.add_argument('--best_prob', action='store_true')
 args = parser.parse_args()
 
 assert sum((args.node, args.graph)) == 1, 'Exactly one must be true.'
-assert sum((args.significance, args.effect_size, args.best_prob)) == 1, 'Exactly one must be true.'
+assert sum((args.p_value, args.effect_size, args.best_prob)) == 1, 'Exactly one must be true.'
 
-if args.significance:
+if args.p_value:
     from tables.p_value import cell_value
 elif args.effect_size:
     from tables.effect_size import cell_value
@@ -28,31 +28,9 @@ elif args.best_prob:
 if args.node:
     datasets = ('Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE')
 elif args.graph:
-    # datasets = ('Proteins', 'Mutag', 'Enzymes', 'Reddit', 'IMDb', 'Collab')
-    datasets = ('Collab',)
-# gnns = ('GCN', 'GAT')
-gnns = ('GAT',)
-dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessage', 'DropSens')
-
-'''
-for name in ('PROTEINS', 'MUTAG', 'ENZYMES', 'REDDIT-BINARY', 'IMDB-BINARY', 'COLLAB'): 
-    dataset = TUDataset(root='./data/TUDataset', name=name, use_node_attr=True)
-    print(dataset.y.unique(return_counts=True)[1].max().item() / dataset.y.size(0))
-'''
-cutoffs = {
-    'Cora': 0.3021,
-    'CiteSeer': 0.2107,
-    'PubMed': None,
-    'Chameleon': 0.2288,
-    'Squirrel': 0.1203,
-    'TwitchDE': 0.6045,
-    'Proteins': 0.5957,
-    'Mutag': 0.6649,
-    'Enzymes': 0.1667,
-    'Reddit': 0.5000,
-    'IMDb': 0.5000,
-    'Collab': 0.5200,
-}
+    datasets = ('Mutag', 'Proteins', 'Enzymes', 'Reddit', 'IMDb', 'Collab')
+gnns = ('GCN', 'GAT', 'GIN')
+dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessage')
 
 metric = 'Accuracy'
 drop_ps = np.round(np.arange(0.1, 1, 0.1), decimals=1)
@@ -75,9 +53,6 @@ def get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio=None):
         if len(test.get(metric, [])) < 300:
             # print(f'Incomplete training run: {exp_dir_format}/{timestamp}')
             continue
-        # if np.max(train[metric]) < cutoffs[dataset]:
-            # print(f'Failed to learn: {exp_dir_format}/{timestamp}, {np.max(train[metric])} < {cutoffs[dataset]}')
-            # pass
         sample = test[metric][np.argmax(val[metric])]
         samples.append(round(sample, 12))
 
@@ -109,17 +84,17 @@ for dataset in tqdm(datasets):
             best_drop_samples, best_config = get_best(dataset, gnn, dropout)
             if best_drop_samples is None:
                 continue
-            data[(dropout, gnn, dataset)] = cell_value(base_drop_samples, best_drop_samples, best_config)
+            data[(gnn, dropout, dataset)] = cell_value(base_drop_samples, best_drop_samples, best_config)
 
-for dropout in dropouts:
-    print(f"\\multirow{{2}}{{*}}{{{dropout}}}", end='')
-    for gnn in gnns:
-        print(f' & {gnn} & ', end='')
+for gnn in gnns:
+    print(f"\\multirow{{{len(dropouts)}}}{{*}}{{{gnn}}}", end='')
+    for dropout in dropouts:
+        print(f' & {dropout} & ', end='')
         to_print = list()
         for dataset in datasets:
-            to_print.append(data.get((dropout, gnn, dataset), ''))
+            to_print.append(data.get((gnn, dropout, dataset), ''))
         print(f"{' & '.join(to_print)} \\\\ ", end='')
-        if gnn != gnns[-1]:
-            print(f"\\hhline{{|~|{'-'*7}|}}")
+        if dropout != dropouts[-1]:
+            print(f"\\hhline{{|~|{'-'*(1+len(datasets))}|}}")
         else:
             print('\\hline')

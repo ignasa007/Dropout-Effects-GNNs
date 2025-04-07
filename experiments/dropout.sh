@@ -4,11 +4,13 @@ source experiments/parse_args.sh
 parse_args "$@"
 
 if [ ! -v datasets ] || [ ${#datasets[@]} -eq 0 ]; then
-    datasets=("Cora" "CiteSeer" "PubMed" "Chameleon" "Squirrel" "TwitchDE" "Actor")
+    echo "Error: --datasets cannot be empty."
+    exit 1
 fi
 
 if [ ! -v gnns ] || [ ${#gnns[@]} -eq 0 ]; then
-    gnns=("GCN" "GIN" "GAT")
+    echo "Error: --gnns cannot be empty."
+    exit 1
 fi
 bias="${bias:-true}"
 hidden_size="${hidden_size:-64}"
@@ -16,11 +18,12 @@ depth="${depth:-4}"
 attention_heads="${attention_heads:-2}"
 pooler="${pooler:-mean}"
 
-if [ ! -v drop_ps ] || [ ${#drop_ps[@]} -eq 0 ]; then
-    drop_ps=(0.2 0.3 0.5 0.8)
+if [ ! -v dropouts ] || [ ${#dropouts[@]} -eq 0 ]; then
+    echo "Error: --dropouts cannot be empty."
+    exit 1
 fi
-if [ ! -v info_loss_ratios ] || [ ${#info_loss_ratios[@]} -eq 0 ]; then
-    info_loss_ratios=(0.5 0.8 0.9 0.95)
+if [ ! -v drop_ps ] || [ ${#drop_ps[@]} -eq 0 ]; then
+    drop_ps=$(seq 0.1 0.1 0.9)
 fi
 
 learning_rate="${learning_rate:-0.001}"
@@ -31,9 +34,9 @@ total_samples="${total_samples:-20}"
 
 for dataset in "${datasets[@]}"; do
     for gnn in "${gnns[@]}"; do
-        for drop_p in $( [[ "$dropout" == "NoDrop" ]] && echo "0.0" || echo "${drop_ps[@]}" ); do
-            for info_loss_ratio in "${info_loss_ratio[@]}"; do
-                config_dir="./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${drop_p}/C=${info_loss_ratio}"
+        for dropout in "${dropouts[@]}"; do
+            for drop_p in $( [[ "$dropout" == "NoDrop" ]] && echo "0.0" || echo "${drop_ps[@]}" ); do
+                config_dir="./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${drop_p}"
                 num_samples=$(find "${config_dir}" -mindepth 1 -type d 2>/dev/null | wc -l)
                 while [ ${num_samples} -lt ${total_samples} ]; do
                     python -m main \
@@ -43,9 +46,8 @@ for dataset in "${datasets[@]}"; do
                         $( [[ "${gnn}" == "GAT" ]] && echo --attention_heads ${attention_heads} ) \
                         --bias "${bias}" \
                         --pooler "${pooler}" \
-                        --dropout "DropSens" \
+                        --dropout "${dropout}" \
                         --drop_p "${drop_p}" \
-                        --info_loss_ratio ${info_loss_ratio} \
                         --learning_rate "${learning_rate}" \
                         --weight_decay "${weight_decay}" \
                         --n_epochs "${n_epochs}" \

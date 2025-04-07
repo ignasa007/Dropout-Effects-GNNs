@@ -4,7 +4,6 @@ import argparse
 
 import numpy as np
 import torch
-from torch_geometric.datasets import Planetoid
 from torch_geometric.utils import degree, remove_self_loops, add_remaining_self_loops, dropout_edge
 from torch_geometric.utils.num_nodes import maybe_num_nodes
 import matplotlib.pyplot as plt
@@ -37,10 +36,10 @@ data = torch.nan * torch.zeros(len(ps), len(ls))
 
 for i, p in enumerate(ps):
         
-    P_p = torch.zeros((num_nodes, num_nodes))
+    P_p = torch.zeros((num_nodes, num_nodes), device=edge_index.device)
     for _ in range(DROPEDGE_SAMPLES):
         dropped_edge_index = add_remaining_self_loops(dropout_edge(edge_index, p, force_undirected=False)[0], num_nodes=num_nodes)[0]
-        A = to_adj_mat(dropped_edge_index, num_nodes=num_nodes)
+        A = to_adj_mat(dropped_edge_index, num_nodes=num_nodes).to(DEVICE)
         out_deg_inv_sqrt = degree(dropped_edge_index[0], num_nodes=num_nodes).pow(-0.5)
         out_deg_inv_sqrt[out_deg_inv_sqrt == float('inf')] = 0
         in_deg_inv_sqrt = degree(dropped_edge_index[1], num_nodes=num_nodes).pow(-0.5)

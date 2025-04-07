@@ -39,7 +39,7 @@ for i, p in enumerate(ps):
     non_diag = non_diag.unsqueeze(dim=1).repeat(1, degrees.size(0)) * A
     diag = torch.diag(diag)
     P = torch.where(diag>0., diag, non_diag)
-    P_l = torch.eye(P.size(0))
+    P_l = torch.eye(P.size(0), device=edge_index.device)
     P_L = P_l.clone()
     for l in range(1, L+1):
         P_l = P @ P_l

@@ -51,7 +51,7 @@ for i, p in enumerate(ps):
 for p, datap in list(zip(ps, data))[::2]:
     axp.plot(ls, datap, label=f'q = {p:.1f}')
 axp.set_xlabel(rf'Shortest Distance, $d_{{\mathsf{{G}}}}(i,j)$', fontsize=20)
-axp.set_ylabel(rf'$\left(\mathbb{{E}}\left[\hat{{A}}^{{sym}}\right]^{{{L}}}\right)_{{ij}}$', fontsize=20)
+axp.set_ylabel(rf'$\sum_{{\ell=0}}^{{L}}\left(\mathbb{{E}}\left[\hat{{A}}^{{asym}}\right]^{{\ell}}\right)_{{ij}}$', fontsize=20)
 axp.set_yscale('log')
 axp.grid()
 axp.legend(loc='lower left', bbox_to_anchor=(0.05, 0.05), fontsize=18)

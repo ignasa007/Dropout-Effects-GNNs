@@ -29,7 +29,7 @@ for dir in args.dirs:
     for src_name, dst_name in zip(src_names, dst_names):
         
         if os.path.isfile(dst_name):
-            print(dst_name)
+            print(f'Overwriting {dst_name}')
             os.remove(dst_name)
         os.makedirs(os.path.dirname(dst_name), exist_ok=True)
         shutil.copy2(src_name, dst_name)

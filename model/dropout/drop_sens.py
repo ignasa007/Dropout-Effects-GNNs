@@ -2,7 +2,6 @@ from typing import Optional
 from argparse import Namespace
 import warnings
 
-import numpy as np
 import sympy
 from sympy.abc import x
 import torch

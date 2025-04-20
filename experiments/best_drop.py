@@ -1,7 +1,8 @@
+import warnings
 import argparse
 import os
-import warnings; warnings.filterwarnings('ignore')
-
+import shutil
+from tqdm import tqdm
 import numpy as np
 from utils.parse_logs import parse_metrics
 
@@ -10,60 +11,82 @@ parser.add_argument('--node', action='store_true')
 parser.add_argument('--graph', action='store_true')
 args = parser.parse_args()
 
+assert sum((args.node, args.graph)) == 1, 'Exactly one must be true.'
+
 if args.node:
-    # 'Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE', 
-    datasets = ('Actor',)
-    driver = 'experiments/node.sh'
+    datasets = ('Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE', 'Actor',)
 elif args.graph:
-    datasets = ('Proteins', 'Mutag', 'Enzymes', 'Reddit', 'IMDb', 'Collab')
-    driver = 'experiments/graph.sh'
+    datasets = ('Proteins', 'Mutag', 'Enzymes', 'Reddit', 'IMDb', 'Collab',)
 else:
     raise ValueError('At least one of args.node and args.graph needs to be true.')
 
-gnns = ('GCN', 'GAT')
-dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessage')
+gnns = ('GCN', 'GAT', 'GIN')
+dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessage', 'DropSens')
 
 metric = 'Accuracy'
 drop_ps = np.round(np.arange(0.1, 1, 0.1), decimals=1)
-exp_dir = './results/{dataset}/{gnn}/L=4/{dropout}/P={drop_p}'
+info_loss_ratios = (0.5, 0.8, 0.9, 0.95)
+exp_dir = './results/{dataset}/{gnn}/L=4/{dropout}/P={drop_p}/C={info_loss_ratio}'
 
 
-def get_samples(dataset, gnn, dropout, drop_p):
+def get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio):
 
-    exp_dir_format = exp_dir.format(dropout=dropout, dataset=dataset, gnn=gnn, drop_p=drop_p)
+    exp_dir_format = exp_dir.format(dropout=dropout, dataset=dataset, gnn=gnn, drop_p=drop_p, info_loss_ratio=info_loss_ratio)
+    if info_loss_ratio is None:
+        exp_dir_format = os.path.dirname(exp_dir_format)
+    
     samples = list()
     if not os.path.isdir(exp_dir_format):
-        return samples
+        return exp_dir_format, samples
+    
     for timestamp in os.listdir(exp_dir_format):
         train, val, test = parse_metrics(f'{exp_dir_format}/{timestamp}/logs')
         if len(test.get(metric, [])) < 300:
-            # print(f'Incomplete training run: {exp_dir_format}/{timestamp}')
+            print(f'Incomplete training run: {exp_dir_format}/{timestamp}')
+            shutil.rmtree(f'{exp_dir_format}/{timestamp}')
             continue
         sample = test[metric][np.argmax(val[metric])]
-        samples.append(sample)
+        samples.append(round(sample, 12))
 
-    if len(samples) < 20:
-        print(dataset, gnn, dropout, drop_p)
+    return exp_dir_format, samples
 
-    return samples[:20]
+def find_best_config(dataset, gnn, dropout):
 
-def find_best_drop_p(dataset, gnn, dropout):
+    best_mean = float('-inf')
+    best_drop_p, best_info_loss_ratio = None, None
+    best_samples = None
 
-    best_mean, best_drop_p = float('-inf'), None
+    for drop_p in ((0.2, 0.3, 0.5, 0.8) if dropout == 'DropSens' else drop_ps):
+        for info_loss_ratio in (info_loss_ratios if dropout == 'DropSens' else (None,)):
+            if (drop_p, info_loss_ratio) in ((0.2, 0.5), (0.3, 0.5), (0.5, 0.5), (0.2, 0.8)):
+                continue
+            exp_dir_format, samples = get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio)
+            if len(samples) < 20:
+                message = f'Not enough samples to find the best config. Only {len(samples)} samples for {exp_dir_format}.'
+                warnings.warn(message)
+                print(message)
+                return None, None
+            mean = np.mean(samples[:20])
+            if mean > best_mean:
+                best_mean = mean
+                best_drop_p, best_info_loss_ratio = drop_p, info_loss_ratio
+                best_samples = samples
 
-    for drop_p in drop_ps:
-        samples = get_samples(dataset, gnn, dropout, drop_p)
-        mean = np.mean(samples)
-        if mean > best_mean:
-            best_mean, best_drop_p = mean, drop_p
-    
-    return best_drop_p
+    return best_drop_p, best_info_loss_ratio, best_samples
 
 device_index = 0
-for dataset in datasets:
+for dataset in tqdm(datasets):
     for gnn in gnns:
         for dropout in dropouts:
-            config_dir = f"./results/{dropout}/{dataset}/{gnn}/L=4/P={find_best_drop_p(dataset, gnn, dropout)}"
-            print(f'bash {driver} --datasets {dataset} --gnns {gnn} --dropouts {dropout} --drop_ps {find_best_drop_p(dataset, gnn, dropout)} --device_index {device_index} 50', end='; ')
-            # print(f'echo {config_dir} $(find {config_dir} -mindepth 1 -type d 2>/dev/null | wc -l)', end='; ')
+            best_drop_p, best_info_loss_ratio, best_samples = find_best_config(dataset, gnn, dropout)
+            if best_drop_p is None:
+                continue
+            if len(best_samples) >= 50:
+                continue
+            if dropout != 'DropSens':
+                driver = 'experiments/dropout.sh'
+                print(f'bash {driver} --datasets {dataset} --gnns {gnn} --dropouts {dropout} --drop_ps {best_drop_p} --device_index {device_index} --total_samples 50', end='; ')
+            else:
+                driver = 'experiments/drop_sens.sh'
+                print(f'bash {driver} --datasets {dataset} --gnns {gnn} --drop_ps {best_drop_p} --info_loss_ratios {best_info_loss_ratio} --device_index {device_index} --total_samples 50', end='; ')
 print()

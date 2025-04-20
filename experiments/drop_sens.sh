@@ -2,14 +2,17 @@
 
 source experiments/parse_args.sh
 parse_args "$@"
+dropout="DropSens"
 
 if [ ! -v datasets ] || [ ${#datasets[@]} -eq 0 ]; then
-    datasets=("Cora" "CiteSeer" "PubMed" "Chameleon" "Squirrel" "TwitchDE" "Actor")
+    echo "Error: --datasets cannot be empty."
+    exit 1
+fi
+if [ ! -v gnns ] || [ ${#gnns[@]} -eq 0 ]; then
+    echo "Error: --gnns cannot be empty."
+    exit 1
 fi
 
-if [ ! -v gnns ] || [ ${#gnns[@]} -eq 0 ]; then
-    gnns=("GCN" "GIN" "GAT")
-fi
 bias="${bias:-true}"
 hidden_size="${hidden_size:-64}"
 depth="${depth:-4}"
@@ -32,7 +35,8 @@ total_samples="${total_samples:-20}"
 for dataset in "${datasets[@]}"; do
     for gnn in "${gnns[@]}"; do
         for drop_p in $( [[ "$dropout" == "NoDrop" ]] && echo "0.0" || echo "${drop_ps[@]}" ); do
-            for info_loss_ratio in "${info_loss_ratio[@]}"; do
+            for info_loss_ratio in "${info_loss_ratios[@]}"; do
+                echo "Running: bash experiments/drop_sens.sh --datasets ${dataset} --gnns ${gnn} --bias ${bias} --hidden_size ${hidden_size} --depth ${depth} --attention_heads ${attention_heads} --pooler ${pooler} --drop_ps ${drop_p} --info_loss_ratios ${info_loss_ratio} --learning_rate ${learning_rate} --weight_decay ${weight_decay} --n_epochs ${n_epochs} --device_index ${device_index} --total_samples ${total_samples}"
                 config_dir="./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${drop_p}/C=${info_loss_ratio}"
                 num_samples=$(find "${config_dir}" -mindepth 1 -type d 2>/dev/null | wc -l)
                 while [ ${num_samples} -lt ${total_samples} ]; do

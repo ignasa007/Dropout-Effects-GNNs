@@ -7,11 +7,11 @@ if [ ! -v datasets ] || [ ${#datasets[@]} -eq 0 ]; then
     echo "Error: --datasets cannot be empty."
     exit 1
 fi
-
 if [ ! -v gnns ] || [ ${#gnns[@]} -eq 0 ]; then
     echo "Error: --gnns cannot be empty."
     exit 1
 fi
+
 bias="${bias:-true}"
 hidden_size="${hidden_size:-64}"
 depth="${depth:-4}"
@@ -36,6 +36,7 @@ for dataset in "${datasets[@]}"; do
     for gnn in "${gnns[@]}"; do
         for dropout in "${dropouts[@]}"; do
             for drop_p in $( [[ "$dropout" == "NoDrop" ]] && echo "0.0" || echo "${drop_ps[@]}" ); do
+                echo "Running: bash experiments/dropout.sh --datasets ${dataset} --gnns ${gnn} --bias ${bias} --hidden_size ${hidden_size} --depth ${depth} --attention_heads ${attention_heads} --pooler ${pooler} --dropouts ${dropout} --drop_ps ${drop_p} --learning_rate ${learning_rate} --weight_decay ${weight_decay} --n_epochs ${n_epochs} --device_index ${device_index} --total_samples ${total_samples}"
                 config_dir="./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${drop_p}"
                 num_samples=$(find "${config_dir}" -mindepth 1 -type d 2>/dev/null | wc -l)
                 while [ ${num_samples} -lt ${total_samples} ]; do

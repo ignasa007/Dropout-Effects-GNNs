@@ -1,30 +1,36 @@
 import numpy as np
 
 
+def values(node_datasets, graph_datasets, gnns, dropouts, args):
+
+    datasets = node_datasets + graph_datasets
+    # gnns = tuple(gnn for gnn in gnns if gnn != 'GIN')
+    dropouts = tuple(dropout for dropout in dropouts if dropout != 'DropSens')
+    
+    return datasets, gnns, dropouts
+
 def color_effect_size(value):
 
     if value < -0.65:      # Between -inf and -0.65, includes -0.8
-        out = '\\cellcolor{\\negative!80}'
+        return '\\cellcolor{\\negative!80}'
     elif value < -0.35:    # Between -0.65 and -0.35, includes -0.5
-        out = '\\cellcolor{\\negative!50}'
+        return '\\cellcolor{\\negative!50}'
     elif value < -0.10:    # Between -0.35 and -0.10, includes -0.2
-        out = '\\cellcolor{\\negative!20}'
+        return '\\cellcolor{\\negative!20}'
     elif value < +0.10:    # Between -0.10 and +0.10, includes 0.0
-        out = ''
+        return '\\cellcolor{white!00}'
     elif value < +0.35:    # Between +0.10 and +0.35, includes +0.2
-        out = '\\cellcolor{\\positive!20}'
+        return '\\cellcolor{\\positive!20}'
     elif value < +0.65:    # Between +0.35 and +0.65, includes +0.5
-        out = '\\cellcolor{\\positive!50}'
+        return '\\cellcolor{\\positive!50}'
     else:                  # Between +0.65 and +inf, includes +0.8
-        out = '\\cellcolor{\\positive!80}'
-
-    return out+' ' if out else out
+        return '\\cellcolor{\\positive!80}'
 
 def cell_value(base_drop_samples, best_drop_samples, best_config):
     
     base_drop_mean, base_drop_std = np.mean(base_drop_samples), np.std(base_drop_samples, ddof=1)
     best_drop_mean, best_drop_std = np.mean(best_drop_samples), np.std(best_drop_samples, ddof=1)
-
+    print(len(base_drop_samples), base_drop_mean, base_drop_std, len(best_drop_samples), best_drop_mean, best_drop_std)
     s_pool = np.sqrt((
         (len(best_drop_samples)-1) * best_drop_std**2 + 
         (len(base_drop_samples)-1) * base_drop_std**2
@@ -36,4 +42,12 @@ def cell_value(base_drop_samples, best_drop_samples, best_config):
     if out[0].isdigit():
         out = f'+{out}'
     
-    return f'{color_effect_size(float(out))}{out}'
+    return f'{color_effect_size(float(out))} ${out}$'
+
+def make_key(datasets, gnns, dropouts):
+
+    indices1, indices2 = datasets, gnns
+    columns = dropouts
+    key = lambda index1, index2, column: (index1, index2, column)
+
+    return indices1, indices2, columns, key

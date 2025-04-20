@@ -2,40 +2,39 @@ import argparse
 import os
 from tqdm import tqdm
 import warnings; warnings.filterwarnings('ignore')
-
 import numpy as np
-
 from utils.parse_logs import parse_metrics
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--node', action='store_true')
-parser.add_argument('--graph', action='store_true')
 parser.add_argument('--p_value', action='store_true')
+parser.add_argument('--power', action='store_true')
 parser.add_argument('--effect_size', action='store_true')
 parser.add_argument('--best_prob', action='store_true')
+parser.add_argument('--node', action='store_true')
+parser.add_argument('--graph', action='store_true')
 args = parser.parse_args()
 
-assert sum((args.node, args.graph)) == 1, 'Exactly one must be true.'
-assert sum((args.p_value, args.effect_size, args.best_prob)) == 1, 'Exactly one must be true.'
+assert sum((args.p_value, args.power, args.effect_size, args.best_prob)) == 1, 'Exactly one must be true.'
 
 if args.p_value:
-    from tables.p_value import cell_value
+    from tables.p_value import *
+elif args.power:
+    from tables.power import *
 elif args.effect_size:
-    from tables.effect_size import cell_value
+    from tables.effect_size import *
 elif args.best_prob:
-    from tables.best_prob import cell_value
+    from tables.best_prob import *
 
-if args.node:
-    datasets = ('Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE')
-elif args.graph:
-    datasets = ('Mutag', 'Proteins', 'Enzymes', 'Reddit', 'IMDb', 'Collab')
-gnns = ('GCN', 'GAT', 'GIN')
-dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessage')
+node_datasets = ('Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE', 'Actor',)[-1:]
+graph_datasets = ('Mutag', 'Proteins', 'Enzymes', 'Reddit', 'IMDb', 'Collab',)
+gnns = ('GCN', 'GAT', 'GIN',)[-1:]
+dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessage', 'DropSens')
+datasets, gnns, dropouts = values(node_datasets, graph_datasets, gnns, dropouts, args)
 
 metric = 'Accuracy'
 drop_ps = np.round(np.arange(0.1, 1, 0.1), decimals=1)
 info_loss_ratios = (0.5, 0.8, 0.9, 0.95)
-exp_dir = './results/{dropout}/{dataset}/{gnn}/L=4/P={drop_p}/C={info_loss_ratio}'
+exp_dir = './results/{dataset}/{gnn}/L=4/{dropout}/P={drop_p}/C={info_loss_ratio}'
 
 
 def get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio=None):
@@ -65,8 +64,10 @@ def get_best(dataset, gnn, dropout):
 
     best_mean, best_samples, best_config = float('-inf'), None, None
 
-    for drop_p in ((0.2, 0.3, 0.5, 0.8) if dropout == 'DropSens' else drop_ps):
+    for drop_p in drop_ps:
         for info_loss_ratio in (info_loss_ratios if dropout == 'DropSens' else (None,)):
+            if (drop_p, info_loss_ratio) in ((0.2, 0.5), (0.3, 0.5), (0.5, 0.5), (0.2, 0.8)):
+                continue
             samples = get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio)
             # Use at least 10 samples and at most 20 samples for computing the best config
             mean = np.mean(samples[:20]) if len(samples) >= 10 else np.nan
@@ -84,17 +85,19 @@ for dataset in tqdm(datasets):
             best_drop_samples, best_config = get_best(dataset, gnn, dropout)
             if best_drop_samples is None:
                 continue
-            data[(gnn, dropout, dataset)] = cell_value(base_drop_samples, best_drop_samples, best_config)
+            # Don't use more than 50 samples for comparison
+            data[(dataset, gnn, dropout)] = cell_value(base_drop_samples[:50], best_drop_samples[:50], best_config)
 
-for gnn in gnns:
-    print(f"\\multirow{{{len(dropouts)}}}{{*}}{{{gnn}}}", end='')
-    for dropout in dropouts:
-        print(f' & {dropout} & ', end='')
+indices1, indices2, columns, key = make_key(datasets, gnns, dropouts)
+for index1 in indices1:
+    print(f'\\multirow{{{len(indices2)}}}{{*}}{{{index1}}}', end='')
+    for index2 in indices2:
+        print(f' & {index2} & ', end='')
         to_print = list()
-        for dataset in datasets:
-            to_print.append(data.get((gnn, dropout, dataset), ''))
+        for column in columns:
+            to_print.append(data.get(key(index1, index2, column), ''))
         print(f"{' & '.join(to_print)} \\\\ ", end='')
-        if dropout != dropouts[-1]:
-            print(f"\\hhline{{|~|{'-'*(1+len(datasets))}|}}")
+        if index2 != indices2[-1]:
+            print(f"\\hhline{{|~|{'-'*(1+len(columns))}|}}")
         else:
             print('\\hline')

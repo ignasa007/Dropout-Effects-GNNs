@@ -20,8 +20,8 @@ elif args.graph:
 else:
     raise ValueError('At least one of args.node and args.graph needs to be true.')
 
-gnns = ('GCN', 'GAT', 'GIN')
-dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessage', 'DropSens')
+gnns = ('GCN', 'GAT', 'GIN',)
+dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessage', 'DropSens',)
 
 metric = 'Accuracy'
 drop_ps = np.round(np.arange(0.1, 1, 0.1), decimals=1)
@@ -43,7 +43,7 @@ def get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio):
         train, val, test = parse_metrics(f'{exp_dir_format}/{timestamp}/logs')
         if len(test.get(metric, [])) < 300:
             print(f'Incomplete training run: {exp_dir_format}/{timestamp}')
-            shutil.rmtree(f'{exp_dir_format}/{timestamp}')
+            # shutil.rmtree(f'{exp_dir_format}/{timestamp}')
             continue
         sample = test[metric][np.argmax(val[metric])]
         samples.append(round(sample, 12))
@@ -58,14 +58,13 @@ def find_best_config(dataset, gnn, dropout):
 
     for drop_p in ((0.2, 0.3, 0.5, 0.8) if dropout == 'DropSens' else drop_ps):
         for info_loss_ratio in (info_loss_ratios if dropout == 'DropSens' else (None,)):
-            if (drop_p, info_loss_ratio) in ((0.2, 0.5), (0.3, 0.5), (0.5, 0.5), (0.2, 0.8)):
+            if (drop_p, info_loss_ratio) in ((0.2, 0.5), (0.3, 0.5), (0.5, 0.5), (0.2, 0.8), (0.3, 0.8)):
                 continue
             exp_dir_format, samples = get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio)
             if len(samples) < 20:
-                message = f'Not enough samples to find the best config. Only {len(samples)} samples for {exp_dir_format}.'
-                warnings.warn(message)
-                print(message)
-                return None, None
+                warnings.warn('Not enough samples to find the best config. '
+                    f'Only {len(samples)} samples for {exp_dir_format}.')
+                return None, None, None
             mean = np.mean(samples[:20])
             if mean > best_mean:
                 best_mean = mean

@@ -7,19 +7,16 @@ from utils.parse_logs import parse_metrics
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--p_value', action='store_true')
-parser.add_argument('--test_acc', action='store_true')
 parser.add_argument('--effect_size', action='store_true')
 parser.add_argument('--best_prob', action='store_true')
 parser.add_argument('--node', action='store_true')
 parser.add_argument('--graph', action='store_true')
 args = parser.parse_args()
 
-assert sum((args.p_value, args.test_acc, args.effect_size, args.best_prob)) == 1, 'Exactly one must be true.'
+assert sum((args.p_value, args.effect_size, args.best_prob)) == 1, 'Exactly one must be true.'
 
 if args.p_value:
     from tables.p_value import *
-elif args.test_acc:
-    from tables.test_acc import *
 elif args.effect_size:
     from tables.effect_size import *
 elif args.best_prob:
@@ -66,7 +63,7 @@ def get_best(dataset, gnn, dropout):
 
     for drop_p in drop_ps:
         for info_loss_ratio in (info_loss_ratios if dropout == 'DropSens' else (None,)):
-            if (drop_p, info_loss_ratio) in ((0.2, 0.5), (0.3, 0.5), (0.5, 0.5), (0.2, 0.8)):
+            if (drop_p, info_loss_ratio) in ((0.2, 0.5), (0.3, 0.5), (0.5, 0.5), (0.2, 0.8), (0.3, 0.8)):
                 continue
             samples = get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio)
             # Use at least 10 samples and at most 20 samples for computing the best config

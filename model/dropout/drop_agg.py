@@ -11,13 +11,13 @@ class DropAgg(BaseDropout):
 
         super(DropAgg, self).__init__(dropout_prob)
     
-    def apply_feature_mat(self, x, training=True):
+    def apply_feature_mat(self, x):
 
-        return super(DropAgg, self).apply_feature_mat(x, training)
+        return super(DropAgg, self).apply_feature_mat(x)
     
-    def apply_adj_mat(self, edge_index, edge_attr=None, training=True):
+    def apply_adj_mat(self, edge_index, edge_attr=None):
 
-        if not training or self.dropout_prob == 0.0:
+        if not self.training or self.dropout_prob == 0.0:
             return edge_index, edge_attr
 
         num_nodes = maybe_num_nodes(edge_index)
@@ -32,6 +32,6 @@ class DropAgg(BaseDropout):
 
         return edge_index, edge_attr
     
-    def apply_message_mat(self, messages, training=True):
+    def apply_message_mat(self, messages):
 
-        return super(DropAgg, self).apply_message_mat(messages, training)
+        return super(DropAgg, self).apply_message_mat(messages)

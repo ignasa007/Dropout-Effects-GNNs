@@ -44,7 +44,7 @@ class GCNLayer(GCNConv):
 
     def feature_transformation(self, x):
 
-        x = self.drop_strategy.apply_feature_mat(x, self.training)
+        x = self.drop_strategy.apply_feature_mat(x)
         x = self.lin(x)
 
         return x
@@ -53,7 +53,7 @@ class GCNLayer(GCNConv):
         
         if self.add_self_loops: # going to add self loops in pretreatment
             edge_index, _ = remove_self_loops(edge_index)
-        edge_index, _ = self.drop_strategy.apply_adj_mat(edge_index, None, self.training)
+        edge_index, _ = self.drop_strategy.apply_adj_mat(edge_index, None)
         edge_index, edge_weight = self.pt.pretreatment(num_nodes, edge_index, dtype)
 
         return edge_index, edge_weight
@@ -92,6 +92,6 @@ class GCNLayer(GCNConv):
             x_j = x_j * edge_weight.view(-1, 1)
 
         # drop from message matrix -- drop message
-        x_j = self.drop_strategy.apply_message_mat(x_j, self.training)
+        x_j = self.drop_strategy.apply_message_mat(x_j)
 
         return x_j

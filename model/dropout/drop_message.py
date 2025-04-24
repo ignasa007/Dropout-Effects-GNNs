@@ -10,14 +10,17 @@ class DropMessage(BaseDropout):
 
         super(DropMessage, self).__init__(dropout_prob)
     
-    def apply_feature_mat(self, x, training=True):
+    def apply_feature_mat(self, x):
 
-        return super(DropMessage, self).apply_feature_mat(x, training)
+        return super(DropMessage, self).apply_feature_mat(x)
     
-    def apply_adj_mat(self, edge_index, edge_attr=None, training=True):
+    def apply_adj_mat(self, edge_index, edge_attr=None):
 
-        return super(DropMessage, self).apply_adj_mat(edge_index, edge_attr, training)
+        return super(DropMessage, self).apply_adj_mat(edge_index, edge_attr)
     
-    def apply_message_mat(self, messages, training=True):
+    def apply_message_mat(self, messages):
+
+        if not self.training or self.dropout_prob == 0.0:
+            return messages
         
-        return dropout(messages, self.dropout_prob, training=training)
+        return dropout(messages, self.dropout_prob)

@@ -17,7 +17,7 @@ class BaseDropout(nn.Module):
         
         self.dropout_prob = dropout_prob
 
-    def apply_feature_mat(self, x, training=True):
+    def apply_feature_mat(self, x):
 
         '''
         Dropout methods applied to the feature matrix, eg.
@@ -30,7 +30,7 @@ class BaseDropout(nn.Module):
 
         return x
     
-    def apply_adj_mat(self, edge_index, edge_attr=None, training=True):
+    def apply_adj_mat(self, edge_index, edge_attr=None):
 
         '''
         Dropout methods applied to the adjacency matrix, eg.
@@ -44,7 +44,7 @@ class BaseDropout(nn.Module):
 
         return edge_index, edge_attr
     
-    def apply_message_mat(self, messages, training=True):
+    def apply_message_mat(self, messages):
 
         '''
         Dropout methods applied to the message matrix, eg.

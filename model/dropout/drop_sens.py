@@ -67,13 +67,13 @@ class DropSens(BaseDropout):
             if q > self.dropout_prob: break
             self.mapper[d] = q
 
-    def apply_feature_mat(self, x, training=True):
+    def apply_feature_mat(self, x):
 
-        return super(DropSens, self).apply_feature_mat(x, training)
+        return super(DropSens, self).apply_feature_mat(x)
     
-    def apply_adj_mat(self, edge_index, edge_attr=None, training=True):
+    def apply_adj_mat(self, edge_index, edge_attr=None):
 
-        if not training or self.dropout_prob == 0.0:
+        if not self.training or self.dropout_prob == 0.0:
             return edge_index, edge_attr
 
         degrees = degree(edge_index[1]).int()
@@ -93,6 +93,6 @@ class DropSens(BaseDropout):
 
         return edge_index, edge_attr
     
-    def apply_message_mat(self, messages, training=True):
+    def apply_message_mat(self, messages):
 
-        return super(DropSens, self).apply_message_mat(messages, training)
+        return super(DropSens, self).apply_message_mat(messages)

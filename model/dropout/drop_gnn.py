@@ -10,17 +10,20 @@ class DropGNN(BaseDropout):
 
         super(DropGNN, self).__init__(dropout_prob)
     
-    def apply_feature_mat(self, x, training=True):
+    def apply_feature_mat(self, x):
 
-        return super(DropGNN, self).apply_feature_mat(x, training)
+        return super(DropGNN, self).apply_feature_mat(x)
     
-    def apply_adj_mat(self, edge_index, edge_attr=None, training=True):
+    def apply_adj_mat(self, edge_index, edge_attr=None):
+
+        if not self.training or self.dropout_prob == 0.0:
+            return edge_index, edge_attr
         
-        edge_index, edge_mask, _ = dropout_node(edge_index, p=self.dropout_prob, training=training)
+        edge_index, edge_mask, _ = dropout_node(edge_index, p=self.dropout_prob)
         edge_attr = edge_attr[edge_mask] if edge_attr is not None else None
 
         return edge_index, edge_attr
     
-    def apply_message_mat(self, messages, training=True):
+    def apply_message_mat(self, messages):
 
-        return super(DropGNN, self).apply_message_mat(messages, training)
+        return super(DropGNN, self).apply_message_mat(messages)

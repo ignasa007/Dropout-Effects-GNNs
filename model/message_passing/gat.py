@@ -43,7 +43,7 @@ class GATLayer(GATConv):
 
     def feature_transformation(self, x):
 
-        x = self.drop_strategy.apply_feature_mat(x, self.training)
+        x = self.drop_strategy.apply_feature_mat(x)
         x = self.lin(x)
 
         return x
@@ -52,7 +52,7 @@ class GATLayer(GATConv):
         
         if self.add_self_loops: # going to add self loops in pretreatment
             edge_index, _ = remove_self_loops(edge_index)
-        edge_index, _ = self.drop_strategy.apply_adj_mat(edge_index, None, self.training)
+        edge_index, _ = self.drop_strategy.apply_adj_mat(edge_index, None)
         edge_index, edge_weight = self.pt.pretreatment(num_nodes, edge_index, dtype)
 
         return edge_index, edge_weight
@@ -102,6 +102,6 @@ class GATLayer(GATConv):
         alpha = softmax(alpha, index, ptr, size_i)
         
         x_j = alpha.unsqueeze(-1) * x_j
-        x_j = self.drop_strategy.apply_message_mat(x_j, self.training)
+        x_j = self.drop_strategy.apply_message_mat(x_j)
 
         return x_j

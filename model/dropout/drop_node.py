@@ -10,9 +10,9 @@ class DropNode(BaseDropout):
 
         super(DropNode, self).__init__(dropout_prob)
     
-    def apply_feature_mat(self, x, training=True):
+    def apply_feature_mat(self, x):
 
-        if not training or self.dropout_prob == 0.0:
+        if not self.training or self.dropout_prob == 0.0:
             return x
         
         unif_samples = torch.rand(x.size(0), 1, device=x.device)
@@ -22,10 +22,10 @@ class DropNode(BaseDropout):
 
         return x
 
-    def apply_adj_mat(self, edge_index, edge_attr=None, training=True):
+    def apply_adj_mat(self, edge_index, edge_attr=None):
         
-        return super(DropNode, self).apply_adj_mat(edge_index, edge_attr, training)
+        return super(DropNode, self).apply_adj_mat(edge_index, edge_attr)
     
-    def apply_message_mat(self, messages, training=True):
+    def apply_message_mat(self, messages):
 
-        return super(DropNode, self).apply_message_mat(messages, training)
+        return super(DropNode, self).apply_message_mat(messages)

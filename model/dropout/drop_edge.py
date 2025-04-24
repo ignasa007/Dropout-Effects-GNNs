@@ -10,17 +10,20 @@ class DropEdge(BaseDropout):
 
         super(DropEdge, self).__init__(dropout_prob)
     
-    def apply_feature_mat(self, x, training=True):
+    def apply_feature_mat(self, x):
 
-        return super(DropEdge, self).apply_feature_mat(x, training)
+        return super(DropEdge, self).apply_feature_mat(x)
     
-    def apply_adj_mat(self, edge_index, edge_attr=None, training=True):
+    def apply_adj_mat(self, edge_index, edge_attr=None):
 
-        edge_index, edge_mask = dropout_edge(edge_index, p=self.dropout_prob, training=training)
+        if not self.training or self.dropout_prob == 0.0:
+            return edge_index, edge_attr
+            
+        edge_index, edge_mask = dropout_edge(edge_index, p=self.dropout_prob)
         edge_attr = edge_attr[edge_mask] if edge_attr is not None else None
 
         return edge_index, edge_attr
     
-    def apply_message_mat(self, messages, training=True):
+    def apply_message_mat(self, messages):
 
-        return super(DropEdge, self).apply_message_mat(messages, training)
+        return super(DropEdge, self).apply_message_mat(messages)

@@ -42,7 +42,7 @@ class GINLayer(GINConv):
     def treat_adj_mat(self, edge_index):
         
         edge_index, _ = remove_self_loops(edge_index)
-        edge_index, _ = self.drop_strategy.apply_adj_mat(edge_index, None, self.training)
+        edge_index, _ = self.drop_strategy.apply_adj_mat(edge_index, None)
 
         return edge_index
 
@@ -62,7 +62,7 @@ class GINLayer(GINConv):
     def forward(self, x: Tensor, edge_index: Adj):
 
         # DROPOUT
-        x = self.drop_strategy.apply_feature_mat(x, self.training)
+        x = self.drop_strategy.apply_feature_mat(x)
         # TREAT ADJACENCY MATRIX
         edge_index = self.treat_adj_mat(edge_index)
         # MESSAGE PASSING
@@ -75,6 +75,6 @@ class GINLayer(GINConv):
     def message(self, x_j: Tensor):
 
         # drop from message matrix -- drop message
-        x_j = self.drop_strategy.apply_message_mat(x_j, self.training)
+        x_j = self.drop_strategy.apply_message_mat(x_j)
 
         return x_j

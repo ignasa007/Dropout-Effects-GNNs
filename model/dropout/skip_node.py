@@ -10,9 +10,9 @@ class SkipNode(BaseDropout):
 
         super(SkipNode, self).__init__(dropout_prob)
     
-    def apply_feature_mat(self, x, training=True):
+    def apply_feature_mat(self, x):
 
-        if not training or self.dropout_prob == 0.0:
+        if not self.training or self.dropout_prob == 0.0:
             return x
 
         new_x = x.clone()
@@ -23,10 +23,10 @@ class SkipNode(BaseDropout):
 
         return new_x
 
-    def apply_adj_mat(self, edge_index, edge_attr=None, training=True):
+    def apply_adj_mat(self, edge_index, edge_attr=None):
         
-        return super(SkipNode, self).apply_adj_mat(edge_index, edge_attr, training)
+        return super(SkipNode, self).apply_adj_mat(edge_index, edge_attr)
     
-    def apply_message_mat(self, messages, training=True):
+    def apply_message_mat(self, messages):
 
-        return super(SkipNode, self).apply_message_mat(messages, training)
+        return super(SkipNode, self).apply_message_mat(messages)

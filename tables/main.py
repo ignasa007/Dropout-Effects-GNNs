@@ -7,27 +7,27 @@ from utils.parse_logs import parse_metrics
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--p_value', action='store_true')
-parser.add_argument('--power', action='store_true')
+parser.add_argument('--test_acc', action='store_true')
 parser.add_argument('--effect_size', action='store_true')
 parser.add_argument('--best_prob', action='store_true')
 parser.add_argument('--node', action='store_true')
 parser.add_argument('--graph', action='store_true')
 args = parser.parse_args()
 
-assert sum((args.p_value, args.power, args.effect_size, args.best_prob)) == 1, 'Exactly one must be true.'
+assert sum((args.p_value, args.test_acc, args.effect_size, args.best_prob)) == 1, 'Exactly one must be true.'
 
 if args.p_value:
     from tables.p_value import *
-elif args.power:
-    from tables.power import *
+elif args.test_acc:
+    from tables.test_acc import *
 elif args.effect_size:
     from tables.effect_size import *
 elif args.best_prob:
     from tables.best_prob import *
 
-node_datasets = ('Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE', 'Actor',)[-1:]
+node_datasets = ('Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE', 'Actor',)
 graph_datasets = ('Mutag', 'Proteins', 'Enzymes', 'Reddit', 'IMDb', 'Collab',)
-gnns = ('GCN', 'GAT', 'GIN',)[-1:]
+gnns = ('GCN', 'GAT', 'GIN',)
 dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessage', 'DropSens')
 datasets, gnns, dropouts = values(node_datasets, graph_datasets, gnns, dropouts, args)
 

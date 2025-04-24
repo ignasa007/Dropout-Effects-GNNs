@@ -15,8 +15,8 @@ def cell_value(base_drop_samples, best_drop_samples, best_config):
 
 def make_key(datasets, gnns, dropouts):
 
-    indices1, indices2 = gnns, datasets
+    indices1, indices2 = datasets, gnns
     columns = dropouts
-    key = lambda index1, index2, column: (index2, index1, column)
+    key = lambda index1, index2, column: (index1, index2, column)
 
     return indices1, indices2, columns, key

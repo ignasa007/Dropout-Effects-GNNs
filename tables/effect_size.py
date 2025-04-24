@@ -4,7 +4,6 @@ import numpy as np
 def values(node_datasets, graph_datasets, gnns, dropouts, args):
 
     datasets = node_datasets + graph_datasets
-    # gnns = tuple(gnn for gnn in gnns if gnn != 'GIN')
     dropouts = tuple(dropout for dropout in dropouts if dropout != 'DropSens')
     
     return datasets, gnns, dropouts
@@ -30,7 +29,7 @@ def cell_value(base_drop_samples, best_drop_samples, best_config):
     
     base_drop_mean, base_drop_std = np.mean(base_drop_samples), np.std(base_drop_samples, ddof=1)
     best_drop_mean, best_drop_std = np.mean(best_drop_samples), np.std(best_drop_samples, ddof=1)
-    print(len(base_drop_samples), base_drop_mean, base_drop_std, len(best_drop_samples), best_drop_mean, best_drop_std)
+    
     s_pool = np.sqrt((
         (len(best_drop_samples)-1) * best_drop_std**2 + 
         (len(base_drop_samples)-1) * base_drop_std**2

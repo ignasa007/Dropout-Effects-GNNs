@@ -2,11 +2,10 @@ import os
 from collections import defaultdict
 import argparse
 from tqdm import tqdm
-
 import numpy as np
 import matplotlib.pyplot as plt
-
 from utils.parse_logs import parse_metrics
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, required=True)

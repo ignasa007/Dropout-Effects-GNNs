@@ -1,14 +1,11 @@
 import os
 from tqdm import tqdm
-import warnings; warnings.filterwarnings('ignore')
-
 import numpy as np
 import matplotlib.pyplot as plt
-
 from utils.parse_logs import parse_metrics
 
 
-datasets = ('Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE', 'Actor') + \
+datasets = ('Chameleon', 'Squirrel', 'TwitchDE', 'Actor', 'Cornell', 'Texas', 'Wisconsin',) + \
     ('Mutag', 'Proteins', 'Enzymes', 'Reddit', 'IMDb', 'Collab')
 gnn = 'GCN'
 baseline = 'DropEdge'
@@ -72,11 +69,11 @@ for dropout, displacement in zip(dropouts, displacements):
     heights = list()
     for dataset in tqdm(datasets):
         best_samples = get_best(dataset, gnn, dropout)
-        if not best_samples:
+        if len(best_samples) < 20:
             continue
         best_mean, best_std = np.mean(best_samples[:50]), np.std(best_samples[:50], ddof=1)
         baseline_mean = np.mean(baseline_samples[dataset][:50])
-        heights.append(100*(best_mean-baseline_mean)/(1-baseline_mean))
+        heights.append(100*(best_mean-baseline_mean))
     ax.bar(x=xs_de+displacement, height=heights, width=width, label=dropout)
 
 ax.set_xticks(xs_de, datasets, rotation=30, fontsize=15)
@@ -84,6 +81,8 @@ ax.set_xticks(xs_de, datasets, rotation=30, fontsize=15)
 # ax.set_yticks(yticks, yticks, fontsize=15)
 ax.set_ylabel('Relative Error Change (%)', fontsize=18)
 ax.grid()
+if len(dropouts) > 1:
+    ax.legend()
 
 fig.tight_layout()
 fn = './assets/DropSens/tmp.png'

@@ -1,12 +1,9 @@
 import argparse
 import os
-import warnings; warnings.filterwarnings('ignore')
 from collections import defaultdict
 from tqdm import tqdm
-
 import numpy as np
 import matplotlib.pyplot as plt
-
 from utils.parse_logs import parse_metrics
 
 

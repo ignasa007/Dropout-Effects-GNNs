@@ -1,14 +1,8 @@
 import argparse
 import os
-import shutil
 from tqdm import tqdm
-import warnings; warnings.filterwarnings('ignore')
-
 import numpy as np
-from scipy import stats
-import pandas as pd
 import matplotlib.pyplot as plt
-
 from utils.parse_logs import parse_metrics
 
 

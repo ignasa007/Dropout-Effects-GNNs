@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 from utils.parse_logs import parse_metrics
 
 
-datasets = ('Chameleon', 'Squirrel', 'TwitchDE', 'Actor', 'Cornell', 'Texas', 'Wisconsin',) + \
-    ('Mutag', 'Proteins', 'Enzymes', 'Reddit', 'IMDb', 'Collab')
-gnn = 'GCN'
-baseline = 'DropEdge'
+datasets = ('Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE', 'Actor',) + \
+    ('Mutag', 'Proteins', 'Enzymes', 'Reddit', 'IMDb', 'Collab',)
+gnn = 'GIN'
+baseline = 'DropSens'
 dropouts = ('DropSens',)
 
 metric = 'Accuracy'
@@ -25,7 +25,7 @@ def get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio=None):
 
     samples = list()
     if not os.path.isdir(exp_dir_format):
-        return samples
+        return exp_dir_format, samples
     
     for timestamp in os.listdir(exp_dir_format):
         train, val, test = parse_metrics(f'{exp_dir_format}/{timestamp}/logs')
@@ -35,23 +35,35 @@ def get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio=None):
         sample = test[metric][np.argmax(val[metric])]
         samples.append(sample)
 
-    return samples
+    return exp_dir_format, samples
 
 def get_best(dataset, gnn, dropout):
 
-    best_mean, best_samples = float('-inf'), None
-
+    best_mean, best_samples, best_exp_dir_format = float('-inf'), None, None
     for drop_p in drop_ps:
         for info_loss_ratio in (info_loss_ratios if dropout == 'DropSens' else (None,)):
-            if (drop_p, info_loss_ratio) in ((0.2, 0.5), (0.3, 0.5), (0.5, 0.5), (0.2, 0.8)):
+            # Skip these values for DropSens because they are equivalent to DropEdge
+            if (drop_p, info_loss_ratio) in ((0.2, 0.5), (0.3, 0.5), (0.5, 0.5), (0.2, 0.8), (0.3, 0.8)):
                 continue
-            samples = get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio)
-            # Use at least 10 samples and at most 20 samples for computing the best config
-            mean = np.mean(samples[:20]) if len(samples) >= 10 else np.nan
+            exp_dir_format, samples = get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio)
+            # If samples is empty, then that config just isn't to be used
+            if not samples:
+                continue
+            # Use exactly 20 samples for computing the best config
+            if len(samples) < 20:
+                print(f'Skipping {exp_dir_format} because ' \
+                    f'at least 20 samples needed, but only {len(samples)} found.')
+                continue
+            mean = np.mean(samples[:20])
             if mean > best_mean:
-                best_mean, best_samples = mean, samples
-    
-    # Return all samples (more than 20 for the best config)
+                best_mean = mean
+                best_samples, best_exp_dir_format = samples, exp_dir_format
+
+    # Return all samples
+    assert len(best_samples) >= 50, f'Found only {len(best_samples)} samples ' \
+        f'for the best performing configuration: {best_exp_dir_format}.'
+    if len(best_samples) > 50:
+        pass    # print(f'Found {len(best_samples)} samples for {best_exp_dir_format}.')
     return best_samples
 
 
@@ -69,15 +81,13 @@ for dropout, displacement in zip(dropouts, displacements):
     heights = list()
     for dataset in tqdm(datasets):
         best_samples = get_best(dataset, gnn, dropout)
-        if len(best_samples) < 20:
-            continue
-        best_mean, best_std = np.mean(best_samples[:50]), np.std(best_samples[:50], ddof=1)
-        baseline_mean = np.mean(baseline_samples[dataset][:50])
-        heights.append(100*(best_mean-baseline_mean))
+        best_mean, best_std = np.mean(best_samples), np.std(best_samples, ddof=1)
+        baseline_mean = np.mean(baseline_samples[dataset])
+        heights.append(100*(best_mean-baseline_mean)/(1-baseline_mean))
     ax.bar(x=xs_de+displacement, height=heights, width=width, label=dropout)
 
 ax.set_xticks(xs_de, datasets, rotation=30, fontsize=15)
-# yticks = np.arange(-2.5, 22.5, 2.5)
+# yticks = np.arange(-5.0, 22.5, 2.5)
 # ax.set_yticks(yticks, yticks, fontsize=15)
 ax.set_ylabel('Relative Error Change (%)', fontsize=18)
 ax.grid()
@@ -85,6 +95,6 @@ if len(dropouts) > 1:
     ax.legend()
 
 fig.tight_layout()
-fn = './assets/DropSens/tmp.png'
+fn = './assets/DropSens/errors-diff.png'
 os.makedirs(os.path.dirname(fn), exist_ok=True)
 plt.savefig(fn)

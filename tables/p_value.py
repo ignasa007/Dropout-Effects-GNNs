@@ -6,7 +6,6 @@ def values(node_datasets, graph_datasets, gnns, dropouts, args):
 
     assert args.node or args.graph, 'Exactly one must be true.'
     
-    gnns = tuple(gnn for gnn in gnns if gnn != 'GIN')
     dropouts = tuple(dropout for dropout in dropouts if dropout != 'DropSens')
     
     if args.node:

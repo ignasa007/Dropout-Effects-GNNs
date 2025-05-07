@@ -12,9 +12,9 @@ if [ ! -v gnns ] || [ ${#gnns[@]} -eq 0 ]; then
     exit 1
 fi
 
-bias="${bias:-true}"
 hidden_size="${hidden_size:-64}"
 depth="${depth:-4}"
+bias="${bias:-true}"
 attention_heads="${attention_heads:-2}"
 pooler="${pooler:-mean}"
 

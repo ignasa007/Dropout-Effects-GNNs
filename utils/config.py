@@ -3,6 +3,7 @@ from distutils.util import strtobool
 from utils.format import format_dataset_name, format_layer_name, \
     format_dropout_name, format_activation_name
 
+
 def layer_sizes(args):
 
     out = list()
@@ -103,8 +104,8 @@ def parse_arguments(return_others=False):
     )
 
     parser.add_argument(
-        '--exp_dir', type=str, required=True,
-        help='Directory to log the experiment in.'
+        '--exp_dir', type=str, default=None,
+        help='Directory to log the experiment in. If skipped, logs are not written anywhere.'
     )
 
     config, _ = parser.parse_known_args()
@@ -150,7 +151,7 @@ def parse_arguments(return_others=False):
     )
 
     parser.add_argument(
-        '--info_loss_ratio', type=float,
+        '--info_save_ratio', type=float,
         help='Ratio of information to preserve per edge when dropout is DropSens.'
     )
 

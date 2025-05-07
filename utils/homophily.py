@@ -49,8 +49,14 @@ def new_measure(edge_index, label):
 
 if __name__ == '__main__':
 
-    from torch_geometric.datasets import *
+    import argparse
+    import torch
+    from dataset import get_dataset
 
-    dataset = Amazon(root='./data/Amazon', name='Computers')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', required=True)
+    args = parser.parse_args()
+    
+    dataset = get_dataset(args.dataset, device=torch.device('cpu'))
     print(f'Edge Homophily: {edge_homophily(dataset.edge_index, dataset.y):.3f}')
     print(f'New Homophily Measure: {new_measure(dataset.edge_index, dataset.y):.3f}')

@@ -13,14 +13,14 @@ dropouts = ('DropSens',)
 
 metric = 'Accuracy'
 drop_ps = np.round(np.arange(0.0, 1, 0.1), decimals=1)
-info_loss_ratios = (0.5, 0.8, 0.9, 0.95)
-exp_dir = './results/{dataset}/{gnn}/L=4/{dropout}/P={drop_p}/C={info_loss_ratio}'
+info_save_ratios = (0.5, 0.8, 0.9, 0.95)
+exp_dir = './results/{dataset}/{gnn}/L=4/{dropout}/P={drop_p}/C={info_save_ratio}'
 
 
-def get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio=None):
+def get_samples(dataset, gnn, dropout, drop_p, info_save_ratio=None):
 
-    exp_dir_format = exp_dir.format(dropout=dropout, dataset=dataset, gnn=gnn, drop_p=drop_p, info_loss_ratio=info_loss_ratio)
-    if info_loss_ratio is None:
+    exp_dir_format = exp_dir.format(dropout=dropout, dataset=dataset, gnn=gnn, drop_p=drop_p, info_save_ratio=info_save_ratio)
+    if info_save_ratio is None:
         exp_dir_format = os.path.dirname(exp_dir_format)
 
     samples = list()
@@ -41,11 +41,11 @@ def get_best(dataset, gnn, dropout):
 
     best_mean, best_samples, best_exp_dir_format = float('-inf'), None, None
     for drop_p in drop_ps:
-        for info_loss_ratio in (info_loss_ratios if dropout == 'DropSens' else (None,)):
+        for info_save_ratio in (info_save_ratios if dropout == 'DropSens' else (None,)):
             # Skip these values for DropSens because they are equivalent to DropEdge
-            if (drop_p, info_loss_ratio) in ((0.2, 0.5), (0.3, 0.5), (0.5, 0.5), (0.2, 0.8), (0.3, 0.8)):
+            if (drop_p, info_save_ratio) in ((0.2, 0.5), (0.3, 0.5), (0.5, 0.5), (0.2, 0.8), (0.3, 0.8)):
                 continue
-            exp_dir_format, samples = get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio)
+            exp_dir_format, samples = get_samples(dataset, gnn, dropout, drop_p, info_save_ratio)
             # If samples is empty, then that config just isn't to be used
             if not samples:
                 continue

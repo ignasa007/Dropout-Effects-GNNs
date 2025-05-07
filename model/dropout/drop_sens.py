@@ -18,7 +18,7 @@ class DropSens(BaseDropout):
         #     apply_feature_mat() and apply_message_mat()
 
         super(DropSens, self).__init__(dropout_prob)    # Maximum value q_i can take
-        self.c = others.info_loss_ratio
+        self.c = others.info_save_ratio
         self.node_level_task = others.task_name.lower().startswith('node')
 
     def init_mapper(self, edge_index):

@@ -25,14 +25,14 @@ dropouts = ('DropEdge', 'DropNode', 'DropAgg', 'DropGNN', 'Dropout', 'DropMessag
 
 metric = 'Accuracy'
 drop_ps = np.round(np.arange(0.1, 1, 0.1), decimals=1)
-info_loss_ratios = (0.5, 0.8, 0.9, 0.95)
-exp_dir = './results/{dataset}/{gnn}/L=4/{dropout}/P={drop_p}/C={info_loss_ratio}'
+info_save_ratios = (0.5, 0.8, 0.9, 0.95)
+exp_dir = './results/{dataset}/{gnn}/L=4/{dropout}/P={drop_p}/C={info_save_ratio}'
 
 
-def get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio):
+def get_samples(dataset, gnn, dropout, drop_p, info_save_ratio):
 
-    exp_dir_format = exp_dir.format(dropout=dropout, dataset=dataset, gnn=gnn, drop_p=drop_p, info_loss_ratio=info_loss_ratio)
-    if info_loss_ratio is None:
+    exp_dir_format = exp_dir.format(dropout=dropout, dataset=dataset, gnn=gnn, drop_p=drop_p, info_save_ratio=info_save_ratio)
+    if info_save_ratio is None:
         exp_dir_format = os.path.dirname(exp_dir_format)
     
     samples = list()
@@ -53,14 +53,14 @@ def get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio):
 def find_best_config(dataset, gnn, dropout):
 
     best_mean = float('-inf')
-    best_drop_p, best_info_loss_ratio = None, None
+    best_drop_p, best_info_save_ratio = None, None
     best_samples = None
 
     for drop_p in ((0.2, 0.3, 0.5, 0.8) if dropout == 'DropSens' else drop_ps):
-        for info_loss_ratio in (info_loss_ratios if dropout == 'DropSens' else (None,)):
-            if (drop_p, info_loss_ratio) in ((0.2, 0.5), (0.3, 0.5), (0.5, 0.5), (0.2, 0.8), (0.3, 0.8)):
+        for info_save_ratio in (info_save_ratios if dropout == 'DropSens' else (None,)):
+            if (drop_p, info_save_ratio) in ((0.2, 0.5), (0.3, 0.5), (0.5, 0.5), (0.2, 0.8), (0.3, 0.8)):
                 continue
-            exp_dir_format, samples = get_samples(dataset, gnn, dropout, drop_p, info_loss_ratio)
+            exp_dir_format, samples = get_samples(dataset, gnn, dropout, drop_p, info_save_ratio)
             if len(samples) < 20:
                 warnings.warn('Not enough samples to find the best config. '
                     f'Only {len(samples)} samples for {exp_dir_format}.')
@@ -68,16 +68,16 @@ def find_best_config(dataset, gnn, dropout):
             mean = np.mean(samples[:20])
             if mean > best_mean:
                 best_mean = mean
-                best_drop_p, best_info_loss_ratio = drop_p, info_loss_ratio
+                best_drop_p, best_info_save_ratio = drop_p, info_save_ratio
                 best_samples = samples
 
-    return best_drop_p, best_info_loss_ratio, best_samples
+    return best_drop_p, best_info_save_ratio, best_samples
 
 device_index = 0
 for dataset in tqdm(datasets):
     for gnn in gnns:
         for dropout in dropouts:
-            best_drop_p, best_info_loss_ratio, best_samples = find_best_config(dataset, gnn, dropout)
+            best_drop_p, best_info_save_ratio, best_samples = find_best_config(dataset, gnn, dropout)
             if best_drop_p is None:
                 continue
             if len(best_samples) >= 50:
@@ -87,5 +87,5 @@ for dataset in tqdm(datasets):
                 print(f'bash {driver} --datasets {dataset} --gnns {gnn} --dropouts {dropout} --drop_ps {best_drop_p} --device_index {device_index} --total_samples 50', end='; ')
             else:
                 driver = 'experiments/drop_sens.sh'
-                print(f'bash {driver} --datasets {dataset} --gnns {gnn} --drop_ps {best_drop_p} --info_loss_ratios {best_info_loss_ratio} --device_index {device_index} --total_samples 50', end='; ')
+                print(f'bash {driver} --datasets {dataset} --gnns {gnn} --drop_ps {best_drop_p} --info_save_ratios {best_info_save_ratio} --device_index {device_index} --total_samples 50', end='; ')
 print()

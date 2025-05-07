@@ -27,19 +27,13 @@ class Logger:
             model (str): model name.
         '''
         
-        # self.exp_dir = f'./results/{config.dropout}/{config.dataset}/{config.gnn}/L={len(config.gnn_layer_sizes)}/P={round(config.drop_p, 6)}/{get_time()}'
         self.exp_dir = config.exp_dir
-        os.makedirs(self.exp_dir)
+        if self.exp_dir:
+            os.makedirs(self.exp_dir)
+            self.log(''.join(f'{k} = {v}\n' for k, v in vars(config).items()), with_time=False)
+            if others is not None:
+                self.log(''.join(f'{k} = {v}\n' for k, v in vars(others).items()), with_time=False)
         
-        self.log(''.join(f'{k} = {v}\n' for k, v in vars(config).items()), with_time=False)
-        # with open(f'{self.exp_dir}/config.pkl', 'wb') as f:
-        #     pickle.dump(config, f, protocol=pickle.HIGHEST_PROTOCOL)
-        
-        if others is not None:
-            self.log(''.join(f'{k} = {v}\n' for k, v in vars(others).items()), with_time=False)
-        # with open(f'{self.exp_dir}/others.pkl', 'wb') as f:
-        #     pickle.dump(others, f, protocol=pickle.HIGHEST_PROTOCOL)
-
     def log(
         self,
         text: str,
@@ -57,12 +51,15 @@ class Logger:
                 to writing it to the log file.
         '''
 
-        if print_text:
+        if not self.exp_dir:
             print(text)
-        if with_time:
-            text = f"{get_time()}: {text}"
-        with open(f'{self.exp_dir}/logs', 'a') as f:
-            f.write(text + '\n')
+        else:
+            if print_text:
+                print(text)
+            if with_time:
+                text = f"{get_time()}: {text}"
+            with open(f'{self.exp_dir}/logs', 'a') as f:
+                f.write(text + '\n')
 
     def log_metrics(
         self,

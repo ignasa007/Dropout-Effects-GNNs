@@ -13,17 +13,17 @@ if [ ! -v gnns ] || [ ${#gnns[@]} -eq 0 ]; then
     exit 1
 fi
 
-bias="${bias:-true}"
 hidden_size="${hidden_size:-64}"
 depth="${depth:-4}"
+bias="${bias:-true}"
 attention_heads="${attention_heads:-2}"
 pooler="${pooler:-mean}"
 
 if [ ! -v drop_ps ] || [ ${#drop_ps[@]} -eq 0 ]; then
     drop_ps=(0.2 0.3 0.5 0.8)
 fi
-if [ ! -v info_loss_ratios ] || [ ${#info_loss_ratios[@]} -eq 0 ]; then
-    info_loss_ratios=(0.5 0.8 0.9 0.95)
+if [ ! -v info_save_ratios ] || [ ${#info_save_ratios[@]} -eq 0 ]; then
+    info_save_ratios=(0.5 0.8 0.9 0.95)
 fi
 
 learning_rate="${learning_rate:-0.001}"
@@ -35,9 +35,9 @@ total_samples="${total_samples:-20}"
 for dataset in "${datasets[@]}"; do
     for gnn in "${gnns[@]}"; do
         for drop_p in $( [[ "$dropout" == "NoDrop" ]] && echo "0.0" || echo "${drop_ps[@]}" ); do
-            for info_loss_ratio in "${info_loss_ratios[@]}"; do
-                echo "Running: bash experiments/drop_sens.sh --datasets ${dataset} --gnns ${gnn} --bias ${bias} --hidden_size ${hidden_size} --depth ${depth} --attention_heads ${attention_heads} --pooler ${pooler} --drop_ps ${drop_p} --info_loss_ratios ${info_loss_ratio} --learning_rate ${learning_rate} --weight_decay ${weight_decay} --n_epochs ${n_epochs} --device_index ${device_index} --total_samples ${total_samples}"
-                config_dir="./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${drop_p}/C=${info_loss_ratio}"
+            for info_save_ratio in "${info_save_ratios[@]}"; do
+                echo "Running: bash experiments/drop_sens.sh --datasets ${dataset} --gnns ${gnn} --bias ${bias} --hidden_size ${hidden_size} --depth ${depth} --attention_heads ${attention_heads} --pooler ${pooler} --drop_ps ${drop_p} --info_save_ratios ${info_save_ratio} --learning_rate ${learning_rate} --weight_decay ${weight_decay} --n_epochs ${n_epochs} --device_index ${device_index} --total_samples ${total_samples}"
+                config_dir="./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${drop_p}/C=${info_save_ratio}"
                 num_samples=$(find "${config_dir}" -mindepth 1 -type d 2>/dev/null | wc -l)
                 while [ ${num_samples} -lt ${total_samples} ]; do
                     python -m main \
@@ -49,7 +49,7 @@ for dataset in "${datasets[@]}"; do
                         --pooler "${pooler}" \
                         --dropout "DropSens" \
                         --drop_p "${drop_p}" \
-                        --info_loss_ratio ${info_loss_ratio} \
+                        --info_save_ratio ${info_save_ratio} \
                         --learning_rate "${learning_rate}" \
                         --weight_decay "${weight_decay}" \
                         --n_epochs "${n_epochs}" \

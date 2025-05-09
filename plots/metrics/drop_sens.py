@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 from utils.parse_logs import parse_metrics
 
 
-datasets = ('Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE', 'Actor',) + \
+datasets = ('Cora', 'CiteSeer', 'PubMed', 'Chameleon', 'Squirrel', 'TwitchDE',) + \
     ('Mutag', 'Proteins', 'Enzymes', 'Reddit', 'IMDb', 'Collab',)
-gnn = 'GIN'
-baseline = 'DropSens'
+gnn = 'GCN'
+baseline = 'DropEdge'
 dropouts = ('DropSens',)
 
 metric = 'Accuracy'
@@ -30,7 +30,7 @@ def get_samples(dataset, gnn, dropout, drop_p, info_save_ratio=None):
     for timestamp in os.listdir(exp_dir_format):
         train, val, test = parse_metrics(f'{exp_dir_format}/{timestamp}/logs')
         if len(test.get(metric, [])) < 300:
-            # print(f'Incomplete training run: {exp_dir_format}/{timestamp}')
+            print(f'Incomplete training run: {exp_dir_format}/{timestamp}')
             continue
         sample = test[metric][np.argmax(val[metric])]
         samples.append(sample)
@@ -63,7 +63,7 @@ def get_best(dataset, gnn, dropout):
     assert len(best_samples) >= 50, f'Found only {len(best_samples)} samples ' \
         f'for the best performing configuration: {best_exp_dir_format}.'
     if len(best_samples) > 50:
-        pass    # print(f'Found {len(best_samples)} samples for {best_exp_dir_format}.')
+        print(f'Found {len(best_samples)} samples for {best_exp_dir_format}.')
     return best_samples
 
 
@@ -80,15 +80,15 @@ for dataset in tqdm(datasets):
 for dropout, displacement in zip(dropouts, displacements):
     heights = list()
     for dataset in tqdm(datasets):
+        baseline_mean = np.mean(baseline_samples[dataset])
         best_samples = get_best(dataset, gnn, dropout)
         best_mean, best_std = np.mean(best_samples), np.std(best_samples, ddof=1)
-        baseline_mean = np.mean(baseline_samples[dataset])
         heights.append(100*(best_mean-baseline_mean)/(1-baseline_mean))
     ax.bar(x=xs_de+displacement, height=heights, width=width, label=dropout)
 
 ax.set_xticks(xs_de, datasets, rotation=30, fontsize=15)
-# yticks = np.arange(-5.0, 22.5, 2.5)
-# ax.set_yticks(yticks, yticks, fontsize=15)
+yticks = np.arange(-2.5, 22.5, 2.5)
+ax.set_yticks(yticks, yticks, fontsize=15)
 ax.set_ylabel('Relative Error Change (%)', fontsize=18)
 ax.grid()
 if len(dropouts) > 1:

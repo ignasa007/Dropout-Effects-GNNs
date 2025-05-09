@@ -34,10 +34,10 @@ total_samples="${total_samples:-20}"
 
 for dataset in "${datasets[@]}"; do
     for gnn in "${gnns[@]}"; do
-        for drop_p in $( [[ "$dropout" == "NoDrop" ]] && echo "0.0" || echo "${drop_ps[@]}" ); do
+        for max_drop_p in $( [[ "$dropout" == "NoDrop" ]] && echo "0.0" || echo "${drop_ps[@]}" ); do
             for info_save_ratio in "${info_save_ratios[@]}"; do
-                echo "Running: bash experiments/drop_sens.sh --datasets ${dataset} --gnns ${gnn} --bias ${bias} --hidden_size ${hidden_size} --depth ${depth} --attention_heads ${attention_heads} --pooler ${pooler} --drop_ps ${drop_p} --info_save_ratios ${info_save_ratio} --learning_rate ${learning_rate} --weight_decay ${weight_decay} --n_epochs ${n_epochs} --device_index ${device_index} --total_samples ${total_samples}"
-                config_dir="./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${drop_p}/C=${info_save_ratio}"
+                echo "Running: bash experiments/drop_sens.sh --datasets ${dataset} --gnns ${gnn} --bias ${bias} --hidden_size ${hidden_size} --depth ${depth} --attention_heads ${attention_heads} --pooler ${pooler} --drop_ps ${max_drop_p} --info_save_ratios ${info_save_ratio} --learning_rate ${learning_rate} --weight_decay ${weight_decay} --n_epochs ${n_epochs} --device_index ${device_index} --total_samples ${total_samples}"
+                config_dir="./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${max_drop_p}/C=${info_save_ratio}"
                 num_samples=$(find "${config_dir}" -mindepth 1 -type d 2>/dev/null | wc -l)
                 while [ ${num_samples} -lt ${total_samples} ]; do
                     python -m main \
@@ -48,7 +48,7 @@ for dataset in "${datasets[@]}"; do
                         --bias "${bias}" \
                         --pooler "${pooler}" \
                         --dropout "DropSens" \
-                        --drop_p "${drop_p}" \
+                        --drop_p "${max_drop_p}" \
                         --info_save_ratio ${info_save_ratio} \
                         --learning_rate "${learning_rate}" \
                         --weight_decay "${weight_decay}" \

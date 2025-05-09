@@ -29,7 +29,7 @@
 ```bash
 conda create --name ${env_name} python=3.9
 conda activate ${env_name}
-pip install -r requirements.txt
+pip install -r ./requirements.txt
 ```
 
 `PyG 2.5.3` has an error in the file `torch_geometric.io.fs` at line 193 (see [issue](https://github.com/pyg-team/pytorch_geometric/issues/9330)). Change it to
@@ -62,9 +62,9 @@ python -m main
     --device_index ${device_index}
 ```
 
-See `utils/config.py` for the full list of command line arguments.
-- `${dataset}` can be one of the classes in `dataset/__init__.py`
-- `${gnn}` can be one of the message passing classes in `model/message_passing/__init__.py`
+See `./utils/config.py` for the full list of command line arguments.
+- `${dataset}` can be one of the classes in `./dataset/__init__.py`
+- `${gnn}` can be one of the message passing classes in `./model/message_passing/__init__.py`
     - if using GAT, pass the number of attention heads, eg. `--attention_heads 2`
     - if using APPNP, pass the number of power iteration steps and the teleport probability, eg. `--power_iter 10 --teleport_p 0.1`
 - the hidden layer sizes can be passed via `--gnn_layer_sizes`, eg. `64 32 16` or even `64*3 32*2 16*1`
@@ -72,7 +72,7 @@ See `utils/config.py` for the full list of command line arguments.
     - options are `mean`, `add` and `max`
 - the readout module is an MLP with hidden layer sizes passed via `--ffn_layer_sizes`
     - empty argument defaults the readout to be a linear layer
-- `${dropout}` can be one of the dropout classes in `model/dropout/__init__.py`
+- `${dropout}` can be one of the dropout classes in `./model/dropout/__init__.py`
 - if using a GPU, pass its index, eg. `--device_index 0`, else CPU will be used
 - for the `--test_every` or `--save_every` arguments
     - passing `n` instructs to test/save every `n` epochs
@@ -128,7 +128,7 @@ The image file is saved at `./assets/influence/${dataset}.png`.
 **Figure 2**
 
 ```bash
-# Run the experiment
+# Run the experiments
 bash experiments/zinc_ct.sh 
     --gnns ${gnn}
     --dropouts ${dropouts}
@@ -147,7 +147,7 @@ python -m plots.metrics.zinc
 
 Find the best dropping probabilities over 20 independent runs:
 ```bash
-bash experiments/dropout.sh 
+bash ./experiments/dropout.sh 
     --datasets ${datasets}
     --gnns ${gnns}
     --dropouts ${dropouts}
@@ -155,6 +155,9 @@ bash experiments/dropout.sh
 python -m tables.main
     --best_prob
 ```
+
+- `${datasets}`, `${gnns}` and `${dropouts}` are passed as space separated lists. See `./experiments/parse_args.sh` for a list of accepted arguments.
+- The results are stored at `./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${drop_p}`.
 
 Perform another 30 runs with the best performing dropping probability:
 ```bash
@@ -170,31 +173,32 @@ bash experiments/dropout.sh
 
 Report the p-values of the t-tests comparing performance against NoDrop:
 ```bash
+# (a)
 python -m tables.main
     --p_value
     --node
 ```
-
-**Table 2**
-
-Execute the first two sets of commands as above, and pass the `--graph` flag in the final command:
 ```bash
+# (b)
 python -m tables.main
     --p_value
     --graph
 ```
 
-**Table 3** and **Table 4**
+**Figure 3** and **Table 2**
 
-Find the best dropping configuration over 20 independent runs:
+
+Find the best configuration over 20 independent runs:
 ```bash
-bash experiments/drop_sens.sh 
+bash ./experiments/drop_sens.sh 
     --datasets ${datasets}
     --gnns ${gnns}
     --device_index ${device_index}
 python -m tables.main
     --best_prob
 ```
+
+The results are stored at `./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${max_drop_p}/C={info_save_ratio}`.
 
 Perform another 30 runs with the best performing dropping configuration:
 ```bash
@@ -208,7 +212,14 @@ bash experiments/dropout.sh
     --device_index ${device_index}
 ```
 
-**Table 5**
+Plot comparison with DropEdge:
+```bash
+python -m plots.metrics.drop_sens
+```
+
+The image file is stored at `./assets/DropSens/errors-diff.png`.
+
+**Table 3**
 
 Computes edge homophily measure [1], and a new homophily measure proposed in [2].
 ```bash
@@ -221,7 +232,7 @@ python -m utils.homphily
 
 [2] Derek Lim, Xiuyu Li, Felix Hohne, and Ser-Nam Lim. New benchmarks for learning on non-homophilous graphs. arXiv preprint arXiv:2104.01404, 2021.
 
-**Figure 3**
+**Figure 4**
 
 ```bash
 python -m plots.linear_gcn.symmetric 
@@ -231,7 +242,7 @@ python -m plots.linear_gcn.symmetric
 
 The image file is stored at `./assets/linear-gcn/symmetric/${dataset}.png`.
 
-**Figure 4**
+**Figure 5**
 
 ```bash
 python -m plots.linear_gcn.black_extension 
@@ -241,7 +252,7 @@ python -m plots.linear_gcn.black_extension
 
 The image file is stored at `./assets/linear-gcn/black-extension/${dataset}.png`.
 
-**Figure 5**
+**Figure 6**
 
 ```bash
 python -m plots.drop_sense_approx
@@ -249,7 +260,7 @@ python -m plots.drop_sense_approx
 
 The image file is stored at `./assets/DropSens/approximation.png`.
 
-**Figures 6 and 7**
+**Figures 7** and **8**
 
 ```bash
 python -m plots.metrics.philia
@@ -257,9 +268,9 @@ python -m plots.metrics.philia
     --dropout ${dropout}
 ```
 
-- In Figure 6, `gnn=GCN` and `dropout=DropEdge`.
-- In Figure 7, `gnn=GCN` and `dropout=DropNode`.
-- The image files are stored at `./assets/philia/${gnn}/${dropout}/Test/heterophilic.png`.
+- In Figure 7, `gnn=GCN` and `dropout=DropEdge`.
+- In Figure 8, `gnn=GCN` and `dropout=DropNode`.
+- The image files are stored at `./assets/philia/${gnn}/${dropout}/test/heterophilic.png`.
 
 **Figure 8**
 
@@ -271,18 +282,32 @@ python -m plots.metrics.philia
 ```
 
 - In Figure 8, `dropout=DropEdge`.
-- The image file is stored at `./assets/philia/${gnn}/${dropout}/Train/heterophilic.png`.
+- The image file is stored at `./assets/philia/${gnn}/${dropout}/train/heterophilic.png`.
 
-**Table 8**
+**Table 6**
 
 ```bash
 python -m tables.main
     --best_prob
 ```
 
-**Table 9**
+**Table 7**
 
 ```bash
 python -m tables.main
     --effect_size
+```
+
+**Table 8**
+
+Change the GNN variable to 'GIN' in `./plots/metrics/drop_sens.py`, and run
+```bash
+python -m plots.metrics.drop_sens
+```
+
+**Table 9**
+
+```bash
+python -m tables.main
+    --best_prob
 ```

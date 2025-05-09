@@ -20,6 +20,7 @@ if args.train:
 else:
     get_value = lambda train, val, test: np.max(test[metric][np.argmax(val[metric])])
     ylabel = 'Test'
+assets_dir = f'./assets/philia/{args.gnn}/{args.dropout}/{ylabel.lower()}'
 
 homo_data = ('Cora', 'CiteSeer', 'PubMed')
 hetero_data = ('Chameleon', 'Squirrel', 'TwitchDE')
@@ -36,7 +37,6 @@ for datasets, fn in zip((homo_data, hetero_data), ('homophilic', 'heterophilic')
 
     for dataset, ax in tqdm(zip(datasets, axs)):
 
-        assets_dir = f"./assets/philia/{args.gnn}/{args.dropout}/{ylabel}"
         exp_dir = f'./results/{dataset}/{args.gnn}/' + 'L={depth}/' + f'{args.dropout}/' + 'P={p}'
 
         ### RETRIEVE METRICS ###

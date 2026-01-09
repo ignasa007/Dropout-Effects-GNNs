@@ -1,0 +1,67 @@
+#!/bin/bash
+
+source experiments/parse_args.sh
+parse_args "$@"
+dropout="DropSens"
+
+if [ ! -v datasets ] || [ ${#datasets[@]} -eq 0 ]; then
+    echo "Error: --datasets cannot be empty."
+    exit 1
+fi
+if [ ! -v gnns ] || [ ${#gnns[@]} -eq 0 ]; then
+    echo "Error: --gnns cannot be empty."
+    exit 1
+fi
+
+hidden_size="${hidden_size:-64}"
+depth="${depth:-4}"
+bias="${bias:-true}"
+gat_attention_heads="${gat_attention_heads:-1}"
+graph_pooler="${graph_pooler:-mean}"
+
+if [ ! -v drop_ps ] || [ ${#drop_ps[@]} -eq 0 ]; then
+    drop_ps=(0.2 0.3 0.5 0.8)
+fi
+if [ ! -v info_save_ratios ] || [ ${#info_save_ratios[@]} -eq 0 ]; then
+    info_save_ratios=(0.5 0.8 0.9 0.95)
+fi
+
+learning_rate="${learning_rate:-0.001}"
+weight_decay="${weight_decay:-0}"
+n_epochs="${n_epochs:-1000}"
+device_index="${device_index:-}"
+total_samples="${total_samples:-20}"
+
+for dataset in "${datasets[@]}"; do
+    for gnn in "${gnns[@]}"; do
+        for max_drop_p in "${drop_ps[@]}"; do
+            for info_save_ratio in "${info_save_ratios[@]}"; do
+                if (( $(echo "${max_drop_p} <= 1 - ${info_save_ratio}" | bc -l) )); then    # Equivalent to DropEdge
+                    echo "DropSens with c=${info_save_ratio} and q_max=${max_drop_p} reduces to DropEdge -- skipping."
+                    continue
+                fi
+                echo "Running: bash experiments/drop_sens.sh --datasets ${dataset} --gnns ${gnn} --bias ${bias} --hidden_size ${hidden_size} --depth ${depth} --gat_attention_heads ${gat_attention_heads} --graph_pooler ${graph_pooler} --drop_ps ${max_drop_p} --dropsens_info_save_ratios ${info_save_ratio} --learning_rate ${learning_rate} --weight_decay ${weight_decay} --n_epochs ${n_epochs} --device_index ${device_index} --total_samples ${total_samples}"
+                config_dir="./results/${dataset}/${gnn}/L=${depth}/${dropout}/P=${max_drop_p}/C=${info_save_ratio}"
+                num_samples=$(find "${config_dir}" -mindepth 1 -type d 2>/dev/null | wc -l)
+                while [ ${num_samples} -lt ${total_samples} ]; do
+                    python -m main \
+                        --dataset "${dataset}" \
+                        --gnn "${gnn}" \
+                        --gnn_layer_sizes "${hidden_size}*${depth}" \
+                        $( [[ "${gnn}" == "GAT" ]] && echo --gat_attention_heads "${gat_attention_heads}" ) \
+                        --bias "${bias}" \
+                        --graph_pooler "${graph_pooler}" \
+                        --dropout "${dropout}" \
+                        --drop_p "${max_drop_p}" \
+                        --dropsens_info_save_ratio "${info_save_ratio}" \
+                        --learning_rate "${learning_rate}" \
+                        --weight_decay "${weight_decay}" \
+                        --n_epochs "${n_epochs}" \
+                        $( [[ -n "${device_index}" ]] && echo --device_index "${device_index}" ) \
+                        --exp_dir "${config_dir}/$(date "+%Y-%m-%d-%H-%M-%S")" \
+                    && num_samples=$((${num_samples}+1));
+                done
+            done
+        done
+    done
+done
